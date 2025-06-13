@@ -34,7 +34,7 @@ function authenticateToken(req, res, next) {
 }
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
 // Configuration pour la production
 if (process.env.NODE_ENV === 'production') {
