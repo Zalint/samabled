@@ -835,7 +835,8 @@ textarea {
     border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 20px;
-    margin-bottom: 20px;
+    margin: 30px 0 20px 0; /* Plus de marge en haut pour séparer du bouton Copier */
+    display: none; /* Masqué par défaut */
 }
 
 .original-highlighted-section h3 {
@@ -1518,6 +1519,74 @@ textarea {
     margin-bottom: 20px;
 }
 
+.language-stats-section {
+    background-color: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.language-stats-section h3 {
+    color: var(--text-color);
+    margin: 0 0 15px 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.language-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.language-stat-card {
+    background-color: var(--hover-color);
+    border-radius: 10px;
+    padding: 15px;
+    border: 1px solid var(--border-color);
+}
+
+.language-stat-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.language-stat-header h4 {
+    margin: 0;
+    color: var(--text-color);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.language-stat-info {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.stat-item {
+    text-align: center;
+    flex: 1;
+}
+
+.stat-number {
+    display: block;
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-bottom: 2px;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
 .dashboard-section h3 {
     color: var(--text-color);
     margin-bottom: 15px;
@@ -1663,6 +1732,25 @@ textarea {
 
 .history-errors.no-errors {
     background-color: var(--error-minor);
+}
+
+.language-badge {
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-right: 8px;
+}
+
+.language-badge.fr {
+    background-color: #4A90E2;
+    color: white;
+}
+
+.language-badge.en {
+    background-color: #28A745;
+    color: white;
 }
 
 .history-toggle {
@@ -1907,6 +1995,11 @@ textarea {
     
     .stat-info h3 {
         font-size: 24px;
+    }
+    
+    .language-stats-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
     }
     
     .dashboard-tabs {

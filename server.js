@@ -94,7 +94,11 @@ app.get('/api/dashboard', authenticateToken, async (req, res) => {
             SELECT 
                 COUNT(*) as total_corrections,
                 COALESCE(SUM(error_count), 0) as total_errors,
-                COALESCE(AVG(error_count), 0) as average_errors
+                COALESCE(AVG(error_count), 0) as average_errors,
+                COUNT(CASE WHEN language = 'fr' OR language IS NULL THEN 1 END) as french_corrections,
+                COUNT(CASE WHEN language = 'en' THEN 1 END) as english_corrections,
+                COALESCE(SUM(CASE WHEN language = 'fr' OR language IS NULL THEN error_count ELSE 0 END), 0) as french_errors,
+                COALESCE(SUM(CASE WHEN language = 'en' THEN error_count ELSE 0 END), 0) as english_errors
             FROM corrected_texts 
             WHERE user_id = $1
         `;
@@ -158,11 +162,12 @@ app.get('/api/dashboard', authenticateToken, async (req, res) => {
                 ct.original_text,
                 ct.error_count,
                 ct.created_at,
+                ct.language,
                 ARRAY_AGG(DISTINCT e.error_type) as error_types
             FROM corrected_texts ct
             LEFT JOIN errors e ON ct.id = e.text_id
             WHERE ct.user_id = $1
-            GROUP BY ct.id, ct.original_text, ct.error_count, ct.created_at
+            GROUP BY ct.id, ct.original_text, ct.error_count, ct.created_at, ct.language
             ORDER BY ct.created_at DESC
             LIMIT 50
         `;
@@ -172,6 +177,7 @@ app.get('/api/dashboard', authenticateToken, async (req, res) => {
             original_text: row.original_text,
             error_count: row.error_count,
             created_at: row.created_at,
+            language: row.language || 'fr',
             error_types: row.error_types ? row.error_types.filter(type => type !== null) : []
         }));
 
@@ -186,7 +192,17 @@ app.get('/api/dashboard', authenticateToken, async (req, res) => {
                 totalCorrections: parseInt(stats.total_corrections),
                 totalErrors: parseInt(stats.total_errors),
                 averageErrors: parseFloat(stats.average_errors),
-                improvementRate: Math.max(0, improvementRate)
+                improvementRate: Math.max(0, improvementRate),
+                french: {
+                    corrections: parseInt(stats.french_corrections),
+                    errors: parseInt(stats.french_errors),
+                    averageErrors: stats.french_corrections > 0 ? parseFloat(stats.french_errors) / parseInt(stats.french_corrections) : 0
+                },
+                english: {
+                    corrections: parseInt(stats.english_corrections),
+                    errors: parseInt(stats.english_errors),
+                    averageErrors: stats.english_corrections > 0 ? parseFloat(stats.english_errors) / parseInt(stats.english_corrections) : 0
+                }
             },
             commonErrors,
             recommendations,

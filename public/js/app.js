@@ -351,14 +351,66 @@ function switchLanguage(lang) {
 }
 
 function updatePlaceholders() {
-    const placeholders = {
+    const translations = {
         fr: {
             input: 'Collez votre texte ici...',
             correct: 'Corriger',
             copy: 'Copier',
             professional: 'Style professionnel',
             normal: 'Style normal',
-            casual: 'Style familier'
+            casual: 'Style familier',
+            // Checkboxes
+            ignoreAccents: 'Ignorer les accents',
+            ignoreCase: 'Ignorer les majuscules',
+            ignoreProperNouns: 'Ignorer les noms propres',
+            // Main sections
+            correctedText: 'Texte corrigé',
+            originalWithHighlights: 'Texte original avec erreurs surlignées',
+            errorsDetected: 'Erreurs détectées',
+            reformulation: 'Reformulation',
+            // Dashboard
+            dashboard: 'Tableau de bord',
+            overview: 'Vue d\'ensemble',
+            history: 'Historique',
+            progress: 'Progression',
+            analysis: 'Analyse',
+            // Stats
+            correctedTexts: 'Textes corrigés',
+            detectedErrors: 'Erreurs détectées',
+            errorsPerText: 'Erreurs par texte',
+            improvement: 'Amélioration',
+            // Dashboard sections
+            mostFrequentErrors: 'Erreurs les plus fréquentes',
+            personalizedRecommendations: 'Recommandations personnalisées',
+            languageStats: 'Statistiques par langue',
+            errorEvolution: 'Évolution des erreurs',
+            errorTypeDistribution: 'Répartition par type d\'erreur',
+            strengths: 'Points forts',
+            areasToImprove: 'Points à améliorer',
+            personalizedTips: 'Conseils personnalisés',
+            // History filters
+            allTexts: 'Tous les textes',
+            thisWeek: 'Cette semaine',
+            thisMonth: 'Ce mois',
+            thisYear: 'Cette année',
+            allLanguages: 'Toutes les langues',
+            french: 'Français',
+            english: 'English',
+            searchHistory: 'Rechercher dans l\'historique...',
+            // Navigation
+            logout: 'Déconnexion',
+            localHistory: 'Historique local',
+            changePassword: 'Changer le mot de passe',
+            login: 'Connexion',
+            register: 'Inscription',
+            // Text stats
+            words: 'mots',
+            characters: 'caractères',
+            // Error messages
+            noErrors: 'Aucune erreur détectée dans votre texte. Votre français est impeccable !',
+            excellentWork: 'Excellent travail !',
+            // Tooltips
+            correction: 'Correction'
         },
         en: {
             input: 'Paste your text here...',
@@ -366,16 +418,301 @@ function updatePlaceholders() {
             copy: 'Copy',
             professional: 'Professional style',
             normal: 'Normal style',
-            casual: 'Casual style'
+            casual: 'Casual style',
+            // Checkboxes (remove ignoreAccents for English)
+            ignoreCase: 'Ignore case',
+            ignoreProperNouns: 'Ignore proper nouns',
+            // Main sections
+            correctedText: 'Corrected text',
+            originalWithHighlights: 'Original text with highlighted errors',
+            errorsDetected: 'Errors detected',
+            reformulation: 'Reformulation',
+            // Dashboard
+            dashboard: 'Dashboard',
+            overview: 'Overview',
+            history: 'History',
+            progress: 'Progress',
+            analysis: 'Analysis',
+            // Stats
+            correctedTexts: 'Corrected texts',
+            detectedErrors: 'Detected errors',
+            errorsPerText: 'Errors per text',
+            improvement: 'Improvement',
+            // Dashboard sections
+            mostFrequentErrors: 'Most frequent errors',
+            personalizedRecommendations: 'Personalized recommendations',
+            languageStats: 'Statistics by language',
+            errorEvolution: 'Error evolution',
+            errorTypeDistribution: 'Error type distribution',
+            strengths: 'Strengths',
+            areasToImprove: 'Areas to improve',
+            personalizedTips: 'Personalized tips',
+            // History filters
+            allTexts: 'All texts',
+            thisWeek: 'This week',
+            thisMonth: 'This month',
+            thisYear: 'This year',
+            allLanguages: 'All languages',
+            french: 'Français',
+            english: 'English',
+            searchHistory: 'Search in history...',
+            // Navigation
+            logout: 'Logout',
+            localHistory: 'Local history',
+            changePassword: 'Change password',
+            login: 'Login',
+            register: 'Register',
+            // Text stats
+            words: 'words',
+            characters: 'characters',
+            // Error messages
+            noErrors: 'No errors detected in your text. Your English is perfect!',
+            excellentWork: 'Excellent work!',
+            // Tooltips
+            correction: 'Correction'
         }
     };
 
-    elements.inputText.placeholder = placeholders[currentLanguage].input;
-    elements.correctBtn.textContent = placeholders[currentLanguage].correct;
-    elements.copyBtn.innerHTML = `<i class="fas fa-copy"></i> ${placeholders[currentLanguage].copy}`;
+    const t = translations[currentLanguage];
+
+    // Update basic elements
+    elements.inputText.placeholder = t.input;
+    elements.correctBtn.textContent = t.correct;
+    elements.copyBtn.innerHTML = `<i class="fas fa-copy"></i> ${t.copy}`;
     elements.styleButtons.forEach(button => {
-        button.textContent = placeholders[currentLanguage][button.dataset.style];
+        button.textContent = t[button.dataset.style];
     });
+
+    // Update checkboxes
+    updateCheckboxLabels(t);
+    
+    // Update main section headers
+    updateSectionHeaders(t);
+    
+    // Update reformulation section headers
+    updateReformulationHeaders(t);
+    
+    // Update dashboard if it exists
+    updateDashboardTranslations(t);
+    
+    // Update navigation elements
+    updateNavigationTranslations(t);
+    
+    // Update text stats
+    updateTextStats();
+}
+
+function updateCheckboxLabels(translations) {
+    const checkboxes = document.querySelectorAll('.correction-options label');
+    checkboxes.forEach(label => {
+        const checkbox = label.querySelector('input[type="checkbox"]');
+        if (checkbox) {
+            const id = checkbox.id;
+            if (id === 'ignoreAccents' && currentLanguage === 'en') {
+                // Hide the "ignore accents" checkbox for English
+                label.style.display = 'none';
+            } else if (id === 'ignoreAccents' && currentLanguage === 'fr') {
+                // Show it back for French
+                label.style.display = 'flex';
+                label.innerHTML = `<input type="checkbox" id="ignoreAccents"> ${translations.ignoreAccents}`;
+            } else if (translations[id]) {
+                label.innerHTML = `<input type="checkbox" id="${id}"> ${translations[id]}`;
+            }
+        }
+    });
+}
+
+function updateSectionHeaders(translations) {
+    // Update main section headers
+    const correctedTextHeader = document.querySelector('.corrected-text h3');
+    if (correctedTextHeader) correctedTextHeader.textContent = translations.correctedText;
+    
+    const originalHighlightHeader = document.querySelector('.original-highlighted-section h3');
+    if (originalHighlightHeader) originalHighlightHeader.textContent = translations.originalWithHighlights;
+    
+    const errorsHeader = document.querySelector('.errors-header h3');
+    if (errorsHeader) {
+        const badge = errorsHeader.querySelector('#errorsBadge');
+        const icon = errorsHeader.querySelector('.collapse-icon');
+        errorsHeader.innerHTML = `${translations.errorsDetected} `;
+        if (badge) errorsHeader.appendChild(badge);
+        if (icon) errorsHeader.appendChild(icon);
+    }
+    
+    const reformulationHeader = document.querySelector('.reformulation-section h3');
+    if (reformulationHeader) reformulationHeader.textContent = translations.reformulation;
+}
+
+function updateDashboardTranslations(translations) {
+    // Dashboard title
+    const dashboardTitle = document.querySelector('.dashboard-content h2');
+    if (dashboardTitle) {
+        dashboardTitle.innerHTML = `<i class="fas fa-chart-line"></i> ${translations.dashboard}`;
+    }
+    
+    // Dashboard tabs
+    const tabs = document.querySelectorAll('.tab-btn');
+    tabs.forEach(tab => {
+        const tabName = tab.dataset.tab;
+        if (translations[tabName]) {
+            tab.textContent = translations[tabName];
+        }
+    });
+    
+    // Stats cards
+    const statCards = document.querySelectorAll('.stat-card p');
+    if (statCards.length >= 4) {
+        statCards[0].textContent = translations.correctedTexts;
+        statCards[1].textContent = translations.detectedErrors;
+        statCards[2].textContent = translations.errorsPerText;
+        statCards[3].textContent = translations.improvement;
+    }
+    
+    // Dashboard section headers
+    const dashboardSections = document.querySelectorAll('.dashboard-section h3');
+    if (dashboardSections.length >= 2) {
+        dashboardSections[0].textContent = translations.mostFrequentErrors;
+        dashboardSections[1].textContent = translations.personalizedRecommendations;
+    }
+    
+    // Language statistics section header
+    const languageStatsHeader = document.querySelector('.language-stats-section h3');
+    if (languageStatsHeader) {
+        languageStatsHeader.textContent = translations.languageStats;
+    }
+    
+    // Progress section headers
+    const progressSections = document.querySelectorAll('.progress-section h3');
+    if (progressSections.length >= 2) {
+        progressSections[0].textContent = translations.errorEvolution;
+        progressSections[1].textContent = translations.errorTypeDistribution;
+    }
+    
+    // Analysis section headers
+    const analysisSections = document.querySelectorAll('.analysis-section h3');
+    if (analysisSections.length >= 3) {
+        analysisSections[0].innerHTML = `<i class="fas fa-thumbs-up"></i> ${translations.strengths}`;
+        analysisSections[1].innerHTML = `<i class="fas fa-target"></i> ${translations.areasToImprove}`;
+        analysisSections[2].innerHTML = `<i class="fas fa-lightbulb"></i> ${translations.personalizedTips}`;
+    }
+    
+    // History filters
+    const historyFilter = document.getElementById('historyFilter');
+    if (historyFilter) {
+        historyFilter.innerHTML = `
+            <option value="all">${translations.allTexts}</option>
+            <option value="week">${translations.thisWeek}</option>
+            <option value="month">${translations.thisMonth}</option>
+            <option value="year">${translations.thisYear}</option>
+        `;
+    }
+    
+    const languageFilter = document.getElementById('languageFilter');
+    if (languageFilter) {
+        languageFilter.innerHTML = `
+            <option value="all">${translations.allLanguages}</option>
+            <option value="fr">${translations.french}</option>
+            <option value="en">${translations.english}</option>
+        `;
+    }
+    
+    const historySearch = document.getElementById('historySearch');
+    if (historySearch) {
+        historySearch.placeholder = translations.searchHistory;
+    }
+}
+
+function updateReformulationHeaders(translations) {
+    // Update reformulation container headers
+    const reformulationHeaders = document.querySelectorAll('.reformulation-header h4');
+    reformulationHeaders.forEach((header, index) => {
+        const styles = ['professional', 'normal', 'casual'];
+        if (styles[index] && translations[styles[index]]) {
+            header.textContent = translations[styles[index]];
+        }
+    });
+    
+    // Update copy buttons in reformulation section
+    const copyButtons = document.querySelectorAll('.copy-reformulation-btn');
+    copyButtons.forEach(button => {
+        button.innerHTML = `<i class="fas fa-copy"></i> ${translations.copy}`;
+    });
+}
+
+function updateNavigationTranslations(translations) {
+    // Dashboard button
+    const dashboardBtn = document.getElementById('dashboardBtn');
+    if (dashboardBtn) {
+        dashboardBtn.innerHTML = `<i class="fas fa-chart-line"></i> ${translations.dashboard}`;
+    }
+    
+    // Change password button
+    const changePasswordBtn = document.getElementById('changePasswordBtn');
+    if (changePasswordBtn) {
+        changePasswordBtn.innerHTML = `<i class="fas fa-key"></i> ${translations.changePassword}`;
+    }
+    
+    // Logout button
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.innerHTML = `<i class="fas fa-sign-out-alt"></i> ${translations.logout}`;
+    }
+    
+    // Guest history button
+    const guestHistoryBtn = document.getElementById('guestHistoryBtn');
+    if (guestHistoryBtn) {
+        guestHistoryBtn.innerHTML = `<i class="fas fa-history"></i> ${translations.localHistory}`;
+    }
+    
+    // Guest history panel header
+    const guestHistoryHeader = document.querySelector('.guest-history-header h3');
+    if (guestHistoryHeader) {
+        guestHistoryHeader.innerHTML = `<i class="fas fa-history"></i> ${translations.localHistory}`;
+    }
+    
+    // Login and register buttons
+    const loginBtn = document.getElementById('loginBtn');
+    if (loginBtn) {
+        loginBtn.textContent = translations.login;
+    }
+    
+    const registerBtn = document.getElementById('registerBtn');
+    if (registerBtn) {
+        registerBtn.textContent = translations.register;
+    }
+}
+
+// Fonction de détection automatique de langue via LLM
+async function detectLanguage(text) {
+    try {
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+
+        // Ajouter le token si l'utilisateur est connecté
+        const token = localStorage.getItem('token');
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(`${API_URL}/detect-language`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ text })
+        });
+
+        if (!response.ok) {
+            console.warn('Erreur détection langue, utilisation langue interface');
+            return currentLanguage;
+        }
+
+        const data = await response.json();
+        return data.language || currentLanguage;
+        
+    } catch (error) {
+        console.warn('Erreur détection langue:', error);
+        return currentLanguage;
+    }
 }
 
 // Fonctions de correction
@@ -389,8 +726,19 @@ async function handleCorrection() {
     const options = getOptionsFromCheckboxes();
 
     // Afficher le loader et désactiver tous les boutons
-    showLoading('Correction en cours...');
+    showLoading('Détection de la langue...');
     disableAllButtons(true);
+
+    // Détecter automatiquement la langue du texte
+    const detectedLanguage = await detectLanguage(text);
+    console.log('Langue détectée:', detectedLanguage);
+    
+    // Afficher la langue détectée à l'utilisateur
+    const languageName = detectedLanguage === 'fr' ? 'Français' : 'English';
+    showNotification(`Langue détectée : ${languageName}`, 'info');
+    
+    // Mettre à jour le message de chargement
+    showLoading('Correction en cours...');
 
     try {
         const headers = {
@@ -408,7 +756,7 @@ async function handleCorrection() {
             headers,
             body: JSON.stringify({
                 text,
-                language: currentLanguage,
+                language: detectedLanguage,
                 options
             })
         });
@@ -426,7 +774,7 @@ async function handleCorrection() {
                 originalText: text,
                 correctedText: data.correctedText,
                 errors: data.errors,
-                language: currentLanguage,
+                language: detectedLanguage,
                 options
             });
             showNotification('Correction sauvegardée localement (mode invité)', 'info');
@@ -451,8 +799,19 @@ function displayCorrection(data) {
     // Afficher le texte corrigé
     elements.correctedText.textContent = data.correctedText;
     
-    // Afficher le texte original avec erreurs surlignées
-    displayOriginalWithHighlights(data.originalText, data.errors);
+    // Afficher/masquer la section "Texte original avec erreurs surlignées" selon s'il y a des erreurs
+    const originalHighlightSection = document.querySelector('.original-highlighted-section');
+    if (data.errors && data.errors.length > 0) {
+        if (originalHighlightSection) {
+            originalHighlightSection.style.display = 'block';
+        }
+        // Afficher le texte original avec erreurs surlignées
+        displayOriginalWithHighlights(data.originalText, data.errors);
+    } else {
+        if (originalHighlightSection) {
+            originalHighlightSection.style.display = 'none';
+        }
+    }
     
     // Afficher la liste des erreurs
     displayErrors(data.errors);
@@ -462,6 +821,12 @@ function displayOriginalWithHighlights(originalText, errors) {
     const originalTextContainer = document.getElementById('originalTextHighlighted');
     if (!originalTextContainer) return;
     
+    // Vérifier que originalText existe
+    if (!originalText) {
+        originalTextContainer.innerHTML = '<p class="error-loading">Texte original non disponible</p>';
+        return;
+    }
+    
     if (!errors || errors.length === 0) {
         originalTextContainer.innerHTML = `<p>${originalText}</p>`;
         return;
@@ -470,8 +835,20 @@ function displayOriginalWithHighlights(originalText, errors) {
     // Créer une copie du texte pour le surlignage
     let highlightedText = originalText;
     
-    // Trier les erreurs par position pour éviter les conflits
-    const sortedErrors = [...errors].sort((a, b) => (b.positionStart || 0) - (a.positionStart || 0));
+    // Dédupliquer les erreurs qui ont les mêmes positions
+    const uniqueErrors = [];
+    const seenPositions = new Set();
+    
+    errors.forEach(error => {
+        const positionKey = `${error.positionStart}-${error.positionEnd}`;
+        if (!seenPositions.has(positionKey) && error.positionStart !== undefined && error.positionEnd !== undefined) {
+            uniqueErrors.push(error);
+            seenPositions.add(positionKey);
+        }
+    });
+    
+    // Trier les erreurs par position pour éviter les conflits (de la fin vers le début)
+    const sortedErrors = uniqueErrors.sort((a, b) => (b.positionStart || 0) - (a.positionStart || 0));
     
     // Appliquer le surlignage pour chaque erreur
     sortedErrors.forEach(error => {
@@ -483,7 +860,11 @@ function displayOriginalWithHighlights(originalText, errors) {
             const after = highlightedText.substring(error.positionEnd);
             
             const severityClass = `error-highlight-${error.severity || 'medium'}`;
-            const highlightedError = `<span class="error-highlight ${severityClass}" title="${error.message}">${errorText}</span>`;
+            const correctionLabel = currentLanguage === 'fr' ? 'Correction' : 'Correction';
+            const tooltipText = error.correction ? `${correctionLabel}: ${error.correction}` : error.message;
+            // Échapper les caractères spéciaux dans le title
+            const escapedTooltip = tooltipText ? tooltipText.replace(/"/g, '&quot;').replace(/'/g, '&#39;') : '';
+            const highlightedError = `<span class="error-highlight ${severityClass}" title="${escapedTooltip}">${errorText}</span>`;
             
             highlightedText = before + highlightedError + after;
         }
@@ -506,15 +887,25 @@ function displayErrors(errors) {
     updateErrorsBadge(errors.length);
     
     if (errors.length === 0) {
+        const excellentWork = currentLanguage === 'fr' ? 'Excellent travail !' : 'Excellent work!';
+        const noErrors = currentLanguage === 'fr' ? 
+            'Aucune erreur détectée dans votre texte. Votre français est impeccable !' :
+            'No errors detected in your text. Your English is perfect!';
+            
         errorsList.innerHTML = `
             <div class="no-errors">
                 <i class="fas fa-check-circle"></i>
-                <h4>Excellent travail !</h4>
-                <p>Aucune erreur détectée dans votre texte. Votre français est impeccable !</p>
+                <h4>${excellentWork}</h4>
+                <p>${noErrors}</p>
             </div>
         `;
         return;
     }
+
+    // Get translations for error display
+    const incorrectLabel = currentLanguage === 'fr' ? 'Ce qui était incorrect :' : 'What was incorrect:';
+    const beforeLabel = currentLanguage === 'fr' ? 'Avant :' : 'Before:';
+    const afterLabel = currentLanguage === 'fr' ? 'Après :' : 'After:';
 
     errorsList.innerHTML = errors.map(error => `
         <div class="error-item error-${error.severity}">
@@ -527,18 +918,18 @@ function displayErrors(errors) {
             </div>
             <div class="error-content">
                 <div class="error-explanation">
-                    <h5>Ce qui était incorrect :</h5>
+                    <h5>${incorrectLabel}</h5>
                     <p class="error-description">${error.message}</p>
                 </div>
                 
                 ${error.original && error.correction && error.original !== error.correction ? 
                     `<div class="error-correction">
                         <div class="correction-before">
-                            <span class="label">❌ Avant :</span>
+                            <span class="label">❌ ${beforeLabel}</span>
                             <span class="text">"${error.original}"</span>
                         </div>
                         <div class="correction-after">
-                            <span class="label">✅ Après :</span>
+                            <span class="label">✅ ${afterLabel}</span>
                             <span class="text">"${error.correction}"</span>
                         </div>
                     </div>` : ''
@@ -559,13 +950,23 @@ function getErrorIcon(severity) {
 }
 
 function getSeverityLabel(severity) {
-    const labels = {
-        severe: 'Erreur grave',
-        medium: 'Erreur moyenne', 
-        minor: 'Erreur mineure',
-        suggestion: 'Suggestion'
-    };
-    return labels[severity] || 'Erreur';
+    if (currentLanguage === 'fr') {
+        const labels = {
+            severe: 'Erreur grave',
+            medium: 'Erreur moyenne', 
+            minor: 'Erreur mineure',
+            suggestion: 'Suggestion'
+        };
+        return labels[severity] || 'Erreur';
+    } else {
+        const labels = {
+            severe: 'Severe error',
+            medium: 'Medium error', 
+            minor: 'Minor error',
+            suggestion: 'Suggestion'
+        };
+        return labels[severity] || 'Error';
+    }
 }
 
 function updateErrorsBadge(errorCount) {
@@ -1175,6 +1576,8 @@ async function verifyToken(token) {
 
 // Initialisation du tableau de bord
 function initDashboard() {
+    console.log('initDashboard called');
+    
     // Gestion des onglets
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1182,24 +1585,44 @@ function initDashboard() {
             switchTab(tabName);
         });
     });
+}
 
+function attachDashboardEventListeners() {
+    console.log('attachDashboardEventListeners called');
+    
     // Gestion des filtres d'historique
     const historyFilter = document.getElementById('historyFilter');
+    const languageFilter = document.getElementById('languageFilter');
     const historySearch = document.getElementById('historySearch');
     
+    console.log('Elements found:', {
+        historyFilter: !!historyFilter,
+        languageFilter: !!languageFilter,
+        historySearch: !!historySearch
+    });
+    
+    // Supprimer les anciens event listeners pour éviter les doublons
     if (historyFilter) {
+        historyFilter.removeEventListener('change', filterHistory);
         historyFilter.addEventListener('change', filterHistory);
+        console.log('Added event listener to historyFilter');
+    }
+    
+    if (languageFilter) {
+        languageFilter.removeEventListener('change', filterHistory);
+        languageFilter.addEventListener('change', filterHistory);
+        console.log('Added event listener to languageFilter');
     }
     
     if (historySearch) {
-        historySearch.addEventListener('input', debounce(filterHistory, 300));
-    }
-
-    // Charger les données du tableau de bord si l'utilisateur est connecté
-    if (isLoggedIn()) {
-        loadDashboardData();
+        historySearch.removeEventListener('input', debouncedFilterHistory);
+        historySearch.addEventListener('input', debouncedFilterHistory);
+        console.log('Added event listener to historySearch');
     }
 }
+
+// Fonction debounced pour le filtrage
+const debouncedFilterHistory = debounce(filterHistory, 300);
 
 // Basculer entre les onglets
 function switchTab(tabName) {
@@ -1261,6 +1684,11 @@ function renderDashboard() {
     
     // Analyse
     renderAnalysis();
+    
+    // Réattacher les event listeners après le rendu
+    setTimeout(() => {
+        attachDashboardEventListeners();
+    }, 100);
 }
 
 // Afficher la vue d'ensemble
@@ -1272,6 +1700,19 @@ function renderOverview() {
     document.getElementById('totalErrors').textContent = stats.totalErrors || 0;
     document.getElementById('averageErrors').textContent = (stats.averageErrors || 0).toFixed(1);
     document.getElementById('improvementRate').textContent = `${(stats.improvementRate || 0).toFixed(1)}%`;
+
+    // Statistiques par langue
+    if (stats.french) {
+        document.getElementById('frenchCorrections').textContent = stats.french.corrections || 0;
+        document.getElementById('frenchErrors').textContent = stats.french.errors || 0;
+        document.getElementById('frenchAverage').textContent = (stats.french.averageErrors || 0).toFixed(1);
+    }
+    
+    if (stats.english) {
+        document.getElementById('englishCorrections').textContent = stats.english.corrections || 0;
+        document.getElementById('englishErrors').textContent = stats.english.errors || 0;
+        document.getElementById('englishAverage').textContent = (stats.english.averageErrors || 0).toFixed(1);
+    }
 
     // Erreurs les plus fréquentes
     renderCommonErrors(dashboardData.commonErrors || []);
@@ -1329,7 +1770,8 @@ function renderHistory(filteredData = null) {
             <div class="history-header" data-toggle-id="${item.id}">
                 <div class="history-info">
                     <span class="history-date">${formatDate(item.created_at)}</span>
-                    <span class="history-errors ${item.error_count === 0 ? 'no-errors' : ''}">${item.error_count} erreur${item.error_count > 1 ? 's' : ''}</span>
+                    <span class="language-badge ${item.language || 'fr'}">${item.language === 'en' ? 'EN' : 'FR'}</span>
+                    <span class="history-errors ${item.error_count === 0 ? 'no-errors' : ''}">${item.error_count} ${currentLanguage === 'fr' ? (item.error_count > 1 ? 'erreurs' : 'erreur') : (item.error_count > 1 ? 'errors' : 'error')}</span>
                 </div>
                 <i class="fas fa-chevron-down history-toggle" id="toggle-${item.id}"></i>
             </div>
@@ -1424,8 +1866,20 @@ async function loadTextDetails(textId, originalHighlightedContainer, correctedTe
         if (textDetails.errors && textDetails.errors.length > 0) {
             let highlightedText = textDetails.originalText;
             
-            // Trier les erreurs par position pour éviter les conflits
-            const sortedErrors = [...textDetails.errors].sort((a, b) => (b.position_start || 0) - (a.position_start || 0));
+            // Dédupliquer les erreurs qui ont les mêmes positions
+            const uniqueErrors = [];
+            const seenPositions = new Set();
+            
+            textDetails.errors.forEach(error => {
+                const positionKey = `${error.position_start}-${error.position_end}`;
+                if (!seenPositions.has(positionKey) && error.position_start !== undefined && error.position_end !== undefined) {
+                    uniqueErrors.push(error);
+                    seenPositions.add(positionKey);
+                }
+            });
+            
+            // Trier les erreurs par position pour éviter les conflits (de la fin vers le début)
+            const sortedErrors = uniqueErrors.sort((a, b) => (b.position_start || 0) - (a.position_start || 0));
             
             // Appliquer le surlignage pour chaque erreur
             sortedErrors.forEach(error => {
@@ -1437,7 +1891,10 @@ async function loadTextDetails(textId, originalHighlightedContainer, correctedTe
                     const after = highlightedText.substring(error.position_end);
                     
                     const severityClass = `error-highlight-${error.severity || 'medium'}`;
-                    const highlightedError = `<span class="error-highlight ${severityClass}" title="${error.error_message || error.message}">${errorText}</span>`;
+                    const tooltipText = error.correction ? `Correction: ${error.correction}` : (error.error_message || error.message);
+                    // Échapper les caractères spéciaux dans le title
+                    const escapedTooltip = tooltipText ? tooltipText.replace(/"/g, '&quot;').replace(/'/g, '&#39;') : '';
+                    const highlightedError = `<span class="error-highlight ${severityClass}" title="${escapedTooltip}">${errorText}</span>`;
                     
                     highlightedText = before + highlightedError + after;
                 }
@@ -1534,12 +1991,20 @@ function getSeverityClass(severity) {
 
 // Filtrer l'historique
 function filterHistory() {
-    if (!dashboardData || !dashboardData.history) return;
+    console.log('filterHistory called');
+    if (!dashboardData || !dashboardData.history) {
+        console.log('No dashboard data or history');
+        return;
+    }
 
     const filter = document.getElementById('historyFilter').value;
+    const languageFilter = document.getElementById('languageFilter').value;
     const search = document.getElementById('historySearch').value.toLowerCase();
     
+    console.log('Filter values:', { filter, languageFilter, search });
+    
     let filteredHistory = [...dashboardData.history];
+    console.log('Original history length:', filteredHistory.length);
 
     // Filtrer par période
     if (filter !== 'all') {
@@ -1563,6 +2028,16 @@ function filterHistory() {
         );
     }
 
+    // Filtrer par langue
+    if (languageFilter !== 'all') {
+        console.log('Filtering by language:', languageFilter);
+        const beforeLength = filteredHistory.length;
+        filteredHistory = filteredHistory.filter(item => 
+            item.language === languageFilter
+        );
+        console.log('After language filter:', beforeLength, '->', filteredHistory.length);
+    }
+
     // Filtrer par recherche
     if (search) {
         filteredHistory = filteredHistory.filter(item =>
@@ -1571,6 +2046,7 @@ function filterHistory() {
         );
     }
 
+    console.log('Final filtered history length:', filteredHistory.length);
     renderHistory(filteredHistory);
 }
 
@@ -1840,10 +2316,21 @@ function openDashboard() {
     
     document.getElementById('dashboardModal').style.display = 'block';
     
+    // Initialiser les event listeners du dashboard
+    initDashboard();
+    
     // Charger les données si pas encore chargées
     if (!dashboardData) {
         loadDashboardData();
+    } else {
+        // Si les données sont déjà chargées, re-rendre le dashboard
+        renderDashboard();
     }
+    
+    // Attacher les event listeners après un court délai
+    setTimeout(() => {
+        attachDashboardEventListeners();
+    }, 200);
 }
 
 // Vérifier si l'utilisateur est connecté

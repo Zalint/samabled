@@ -256,25 +256,52 @@ async function correctTextWithGPT4(text, language, options) {
             messages: [
                 {
                     role: "system",
-                    content: `Vous êtes un professeur de ${language === 'fr' ? 'français' : 'anglais'} expérimenté et bienveillant. 
-                    Votre rôle est de corriger le texte et d'expliquer chaque erreur de manière pédagogique, comme si vous enseigniez à un élève.
+                    content: `${language === 'en' ? 
+                        'RESPOND EXCLUSIVELY IN ENGLISH. DO NOT USE ANY FRENCH WORDS OR PHRASES. ALL TEXT MUST BE IN ENGLISH ONLY.' :
+                        'RÉPONDEZ EXCLUSIVEMENT EN FRANÇAIS. N\'UTILISEZ AUCUN MOT OU PHRASE EN ANGLAIS. TOUT LE TEXTE DOIT ÊTRE EN FRANÇAIS UNIQUEMENT.'
+                    }
                     
-                    Options de correction:
-                    - Ignorer les accents: ${options.ignoreAccents}
-                    - Ignorer les majuscules: ${options.ignoreCase}
-                    - Ignorer les noms propres: ${options.ignoreProperNouns}
+                    You are an experienced and caring ${language === 'fr' ? 'French' : 'English'} teacher. 
+                    Your role is to correct the text and explain each error pedagogically, as if you were teaching a student.
                     
-                    Pour chaque erreur, donnez une explication complète qui inclut :
-                    - La règle grammaticale ou orthographique concernée
-                    - Pourquoi c'est incorrect dans ce contexte
-                    - Comment bien l'écrire et pourquoi
-                    - Un conseil mnémotechnique ou une astuce pour retenir la règle
-                    - Un exemple similaire si pertinent
+                    LANGUAGE REQUIREMENT: ${language === 'en' ? 'Write everything in ENGLISH language only.' : 'Écrivez tout en langue FRANÇAISE uniquement.'}
                     
-                    Types d'erreurs possibles : Grammaire, Conjugaison, Orthographe, Accord, Ponctuation, Style, Vocabulaire, Syntaxe
+                    Correction options:
+                    - Ignore accents: ${options.ignoreAccents}
+                    - Ignore case: ${options.ignoreCase}
+                    - Ignore proper nouns: ${options.ignoreProperNouns}
                     
-                    IMPORTANT: Retournez UNIQUEMENT un JSON valide, sans texte supplémentaire, avec cette structure exacte:
-                    {"correctedText": "texte corrigé", "errors": [{"type": "type d'erreur", "message": "explication pédagogique détaillée avec règles et conseils", "severity": "severe", "original": "mot original", "correction": "mot corrigé"}]}`
+                    ${language === 'en' ? 
+                        'For each error, provide a complete explanation IN ENGLISH that includes:' :
+                        'Pour chaque erreur, donnez une explication complète qui inclut :'
+                    }
+                    ${language === 'en' ? 
+                        '- The grammatical or spelling rule concerned\n                    - Why it\'s incorrect in this context\n                    - How to write it correctly and why\n                    - A mnemonic tip or trick to remember the rule\n                    - A similar example if relevant' :
+                        '- La règle grammaticale ou orthographique concernée\n                    - Pourquoi c\'est incorrect dans ce contexte\n                    - Comment bien l\'écrire et pourquoi\n                    - Un conseil mnémotechnique ou une astuce pour retenir la règle\n                    - Un exemple similaire si pertinent'
+                    }
+                    
+                    ${language === 'fr' ? 
+                        'Types d\'erreurs possibles : Grammaire, Conjugaison, Orthographe, Accord, Ponctuation, Style, Vocabulaire, Syntaxe' :
+                        'Possible error types: Grammar, Conjugation, Spelling, Agreement, Punctuation, Style, Vocabulary, Syntax'
+                    }
+                    
+                    ${language === 'en' ? 
+                        'IMPORTANT: Return ONLY valid JSON IN ENGLISH, without additional text, with this exact structure:' :
+                        'IMPORTANT: Retournez UNIQUEMENT un JSON valide EN FRANÇAIS, sans texte supplémentaire, avec cette structure exacte:'
+                    }
+                    ${language === 'en' ? 
+                        '{"correctedText": "corrected text", "errors": [{"type": "error type IN ENGLISH", "message": "detailed pedagogical explanation IN ENGLISH with rules and advice", "severity": "severe", "original": "original word", "correction": "corrected word"}]}' :
+                        '{"correctedText": "texte corrigé", "errors": [{"type": "type d\'erreur EN FRANÇAIS", "message": "explication pédagogique détaillée EN FRANÇAIS avec règles et conseils", "severity": "severe", "original": "mot original", "correction": "mot corrigé"}]}'
+                    }
+                    
+                    ${language === 'en' ? 
+                        'MANDATORY: For each error, you MUST include the "original" and "correction" fields IN ENGLISH:' :
+                        'OBLIGATOIRE: Pour chaque erreur, vous DEVEZ inclure les champs "original" et "correction" EN FRANÇAIS:'
+                    }
+                    ${language === 'en' ? 
+                        '- "original": the incorrect word or expression in the original text\n                    - "correction": the correct word or expression that should replace it\n                    If the error concerns punctuation or structure, use the appropriate context.' :
+                        '- "original": le mot ou expression incorrect dans le texte original\n                    - "correction": le mot ou expression correct qui devrait le remplacer\n                    Si l\'erreur concerne la ponctuation ou la structure, utilisez le contexte approprié.'
+                    }`
                 },
                 {
                     role: "user",
@@ -317,11 +344,19 @@ async function verifyCorrectionWithGPT35(originalText, correctedText, language) 
             messages: [
                 {
                     role: "system",
-                    content: `Vous êtes un professeur de ${language === 'fr' ? 'français' : 'anglais'} qui vérifie le travail d'un collègue.
-                    Examinez la correction proposée et identifiez d'éventuelles erreurs supplémentaires manquées.
-                    Si vous trouvez des erreurs, expliquez-les de manière pédagogique avec la règle concernée.
-                    IMPORTANT: Retournez UNIQUEMENT un JSON valide, sans texte supplémentaire:
-                    {"isValid": true, "feedback": "commentaire pédagogique", "additionalErrors": [{"type": "type", "message": "explication détaillée", "original": "mot", "correction": "correction"}]}`
+                    content: `${language === 'en' ? 
+                        'RESPOND EXCLUSIVELY IN ENGLISH. DO NOT USE ANY FRENCH WORDS OR PHRASES. ALL TEXT MUST BE IN ENGLISH ONLY.' :
+                        'RÉPONDEZ EXCLUSIVEMENT EN FRANÇAIS. N\'UTILISEZ AUCUN MOT OU PHRASE EN ANGLAIS. TOUT LE TEXTE DOIT ÊTRE EN FRANÇAIS UNIQUEMENT.'
+                    }
+                    
+                    You are a ${language === 'fr' ? 'French' : 'English'} teacher reviewing a colleague's work.
+                    Examine the proposed correction and identify any additional errors that may have been missed.
+                    If you find errors, explain them pedagogically with the relevant rule.
+                    
+                    LANGUAGE REQUIREMENT: ${language === 'en' ? 'Write everything in ENGLISH language only.' : 'Écrivez tout en langue FRANÇAISE uniquement.'}
+                    
+                    IMPORTANT: Return ONLY valid JSON, without additional text:
+                    {"isValid": true, "feedback": "pedagogical comment", "additionalErrors": [{"type": "type", "message": "detailed explanation", "original": "word", "correction": "correction"}]}`
                 },
                 {
                     role: "user",
@@ -362,6 +397,121 @@ async function verifyCorrectionWithGPT35(originalText, correctedText, language) 
     }
 }
 
+// Fonction pour ajouter les positions des erreurs dans le texte original
+function addErrorPositions(originalText, errors) {
+    return errors.map(error => {
+        let positionStart = undefined;
+        let positionEnd = undefined;
+        
+        if (error.original && error.original.trim()) {
+            // Chercher la position du mot/phrase original dans le texte
+            const searchTerm = error.original.trim();
+            const position = originalText.toLowerCase().indexOf(searchTerm.toLowerCase());
+            
+            if (position !== -1) {
+                positionStart = position;
+                positionEnd = position + searchTerm.length;
+            }
+        }
+        
+        // Si on n'a pas trouvé avec error.original, essayer d'autres méthodes
+        if (positionStart === undefined) {
+            // Essayer de trouver des mots-clés dans le message d'erreur
+            const message = error.message || '';
+            
+            // Chercher des patterns spécifiques dans les messages d'erreur français
+            const patterns = [
+                /'([^']+)'/g,                           // Mots entre guillemets simples
+                /"([^"]+)"/g,                           // Mots entre guillemets doubles
+                /La forme verbale '([^']+)'/g,          // "La forme verbale 'tester'"
+                /Le mot '([^']+)'/g,                    // "Le mot 'veu'"
+                /L'expression '([^']+)'/g,              // "L'expression 'xxx'"
+                /utiliser '([^']+)'/g,                  // "utiliser 'teste'"
+                /écrire '([^']+)'/g,                    // "écrire 'veux'"
+                /\b([a-zA-ZàâäéèêëïîôöùûüÿçÀÂÄÉÈÊËÏÎÔÖÙÛÜŸÇ]{3,})\b/g  // Mots français de 3+ lettres
+            ];
+            
+            for (const pattern of patterns) {
+                const matches = [...message.matchAll(pattern)];
+                for (const match of matches) {
+                    const word = match[1];
+                    if (word && word.length > 2) {
+                        // Chercher le mot exact d'abord
+                        let position = originalText.toLowerCase().indexOf(word.toLowerCase());
+                        
+                        // Si pas trouvé, essayer sans accents
+                        if (position === -1) {
+                            const normalizedWord = word.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                            const normalizedText = originalText.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                            position = normalizedText.toLowerCase().indexOf(normalizedWord.toLowerCase());
+                        }
+                        
+                        if (position !== -1) {
+                            positionStart = position;
+                            positionEnd = position + word.length;
+                            break;
+                        }
+                    }
+                }
+                if (positionStart !== undefined) break;
+            }
+        }
+        
+        return {
+            ...error,
+            positionStart: positionStart || 0,
+            positionEnd: positionEnd || 0
+        };
+    });
+}
+
+// Route de détection de langue (accessible en mode invité et connecté)
+router.post('/detect-language', optionalAuth, async (req, res) => {
+    try {
+        const { text } = req.body;
+        
+        if (!text || text.trim().length === 0) {
+            return res.status(400).json({ error: 'Texte requis pour la détection de langue' });
+        }
+
+        // Prompt pour la détection de langue
+        const prompt = `Analyze the following text and determine if it is written in French or English. 
+        Respond with ONLY "fr" for French or "en" for English, nothing else.
+        
+        Text to analyze: "${text}"`;
+
+        const response = await openai.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: [
+                {
+                    role: "system",
+                    content: "You are a language detection expert. You must respond with only 'fr' for French text or 'en' for English text."
+                },
+                {
+                    role: "user",
+                    content: prompt
+                }
+            ],
+            max_tokens: 10,
+            temperature: 0
+        });
+
+        const detectedLanguage = response.choices[0].message.content.trim().toLowerCase();
+        
+        // Validation de la réponse
+        if (detectedLanguage !== 'fr' && detectedLanguage !== 'en') {
+            console.warn('Réponse de détection invalide:', detectedLanguage);
+            return res.json({ language: 'fr' }); // Défaut français
+        }
+
+        res.json({ language: detectedLanguage });
+
+    } catch (error) {
+        console.error('Erreur détection langue:', error);
+        res.status(500).json({ error: 'Erreur lors de la détection de langue', language: 'fr' });
+    }
+});
+
 // Route de correction (accessible en mode invité et connecté)
 router.post('/correct', optionalAuth, async (req, res) => {
     try {
@@ -373,17 +523,22 @@ router.post('/correct', optionalAuth, async (req, res) => {
         // Vérification avec GPT-3.5-turbo
         const verification = await verifyCorrectionWithGPT35(text, initialCorrection.correctedText, language);
 
+        // Ajouter les positions des erreurs pour le surlignage
+        const errorsWithPositions = addErrorPositions(text, initialCorrection.errors);
+
         // Combiner les résultats
         const finalResult = {
+            originalText: text,
             correctedText: initialCorrection.correctedText,
-            errors: [...initialCorrection.errors],
+            errors: errorsWithPositions,
             verification: verification,
             isGuest: !req.isAuthenticated
         };
 
         // Si le vérificateur a trouvé des erreurs supplémentaires
         if (!verification.isValid && verification.additionalErrors) {
-            finalResult.errors = [...finalResult.errors, ...verification.additionalErrors];
+            const additionalErrorsWithPositions = addErrorPositions(text, verification.additionalErrors);
+            finalResult.errors = [...finalResult.errors, ...additionalErrorsWithPositions];
         }
 
         // Sauvegarder seulement si l'utilisateur est connecté
@@ -413,15 +568,17 @@ router.post('/correct', optionalAuth, async (req, res) => {
                 try {
                     // Utiliser les colonnes qui existent réellement dans la base de données
                     const insertResult = await db.query(
-                        `INSERT INTO errors (text_id, error_type, error_message, severity, position_start, position_end) 
-                         VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+                        `INSERT INTO errors (text_id, error_type, error_message, severity, position_start, position_end, original_word, corrected_word) 
+                         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
                         [
                             textId, 
                             error.type, 
                             error.message || 'Erreur détectée',
                             error.severity || 'medium',
-                            0, // position_start par défaut
-                            0  // position_end par défaut
+                            error.positionStart || 0,
+                            error.positionEnd || 0,
+                            error.original || null,
+                            error.correction || null
                         ]
                     );
                     console.log(`✅ SAUVEGARDE - Erreur ${i + 1} sauvegardée avec ID:`, insertResult.rows[0].id);
@@ -430,8 +587,8 @@ router.post('/correct', optionalAuth, async (req, res) => {
                     // Fallback: essayer avec seulement les colonnes obligatoires
                     try {
                         const fallbackResult = await db.query(
-                            'INSERT INTO errors (text_id, error_type, error_message, severity, position_start, position_end) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
-                            [textId, error.type || 'Autre', 'Erreur détectée', error.severity || 'medium', 0, 0]
+                            'INSERT INTO errors (text_id, error_type, error_message, severity, position_start, position_end, original_word, corrected_word) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',
+                            [textId, error.type || 'Autre', 'Erreur détectée', error.severity || 'medium', 0, 0, null, null]
                         );
                         console.log(`⚠️ SAUVEGARDE - Erreur ${i + 1} sauvegardée en mode fallback avec ID:`, fallbackResult.rows[0].id);
                     } catch (fallbackError) {

@@ -178,7 +178,7 @@
     /* Optimisations dashboard mobile */
     .original-highlighted-section {
         padding: 12px;
-        margin-bottom: 15px;
+        margin: 20px 0 15px 0; /* Marge ajustée pour mobile */
     }
 
     .original-highlighted-section h3 {

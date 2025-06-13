@@ -266,6 +266,52 @@
                             </div>
                         </div>
 
+                        <div class="language-stats-section">
+                            <h3>Statistiques par langue</h3>
+                            <div class="language-stats-grid">
+                                <div class="language-stat-card french">
+                                    <div class="language-stat-header">
+                                        <span class="language-badge fr">FR</span>
+                                        <h4>Français</h4>
+                                    </div>
+                                    <div class="language-stat-info">
+                                        <div class="stat-item">
+                                            <span class="stat-number" id="frenchCorrections">0</span>
+                                            <span class="stat-label">textes</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <span class="stat-number" id="frenchErrors">0</span>
+                                            <span class="stat-label">erreurs</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <span class="stat-number" id="frenchAverage">0</span>
+                                            <span class="stat-label">moy/texte</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="language-stat-card english">
+                                    <div class="language-stat-header">
+                                        <span class="language-badge en">EN</span>
+                                        <h4>English</h4>
+                                    </div>
+                                    <div class="language-stat-info">
+                                        <div class="stat-item">
+                                            <span class="stat-number" id="englishCorrections">0</span>
+                                            <span class="stat-label">texts</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <span class="stat-number" id="englishErrors">0</span>
+                                            <span class="stat-label">errors</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <span class="stat-number" id="englishAverage">0</span>
+                                            <span class="stat-label">avg/text</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="dashboard-section">
                             <h3>Erreurs les plus fréquentes</h3>
                             <div id="commonErrors" class="common-errors"></div>
@@ -285,6 +331,11 @@
                                 <option value="week">Cette semaine</option>
                                 <option value="month">Ce mois</option>
                                 <option value="year">Cette année</option>
+                            </select>
+                            <select id="languageFilter">
+                                <option value="all">Toutes les langues</option>
+                                <option value="fr">Français</option>
+                                <option value="en">English</option>
                             </select>
                             <input type="search" id="historySearch" placeholder="Rechercher dans l'historique...">
                         </div>
