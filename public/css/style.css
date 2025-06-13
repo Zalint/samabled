@@ -57,7 +57,16 @@ body {
 input, textarea, select {
     font-size: 16px;
     -webkit-appearance: none;
-    border-radius: 0;
+    border-radius: 8px;
+}
+
+/* Optimisations tactiles pour mobile */
+@media (hover: none) and (pointer: coarse) {
+    button, .toggle-password, .nav-links button {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 12px 16px;
+    }
 }
 
 /* Améliorer les performances de scroll sur mobile */
@@ -846,149 +855,9 @@ textarea {
     }
 }
 
-/* Smartphones (480px et moins) - iPhone, Android */
+/* Smartphones optimisés - Remplacé par mobile.css */
+
 @media (max-width: 480px) {
-    .app-container {
-        padding: 10px;
-    }
-
-    /* Navigation mobile */
-    nav {
-        flex-direction: column;
-        gap: 15px;
-        padding: 10px 0;
-    }
-
-    .logo {
-        font-size: 20px;
-        text-align: center;
-    }
-
-    .nav-links {
-        flex-direction: column;
-        gap: 8px;
-        align-items: flex-end;
-    }
-
-    .nav-links button {
-        padding: 10px 15px;
-        font-size: 14px;
-    }
-
-    /* Sélecteur de langue */
-    .language-selector {
-        justify-content: center;
-        margin-bottom: 15px;
-    }
-
-    .language-selector button {
-        padding: 10px 15px;
-        font-size: 14px;
-        min-width: 100px;
-    }
-
-    /* Zone de texte */
-    .text-area-container {
-        gap: 15px;
-    }
-
-    .input-section, .output-section {
-        padding: 15px;
-    }
-
-    textarea {
-        height: 150px;
-        font-size: 16px; /* Évite le zoom sur iOS */
-    }
-
-    /* Boutons principaux */
-    .primary-btn, .secondary-btn {
-        padding: 12px 20px;
-        font-size: 16px;
-        width: 100%;
-        margin-bottom: 10px;
-    }
-
-    /* Options de correction */
-    .correction-options {
-        gap: 8px;
-    }
-
-    .correction-options label {
-        font-size: 14px;
-        padding: 8px 0;
-    }
-
-    /* Zone de texte corrigé */
-    .text-output {
-        min-height: 120px;
-        font-size: 15px;
-        line-height: 1.6;
-    }
-
-    /* Erreurs */
-    .error-item {
-        padding: 12px;
-        margin-bottom: 10px;
-    }
-
-    .error-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-    }
-
-    .error-severity {
-        align-self: flex-start;
-    }
-
-    .error-content {
-        margin-left: 0;
-    }
-
-    .error-correction {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 5px;
-    }
-
-    /* Reformulation */
-    .reformulation-section {
-        margin-top: 20px;
-    }
-
-    .style-buttons {
-        gap: 10px;
-    }
-
-    .style-buttons button {
-        padding: 12px 16px;
-        font-size: 14px;
-    }
-
-    .reformulation-outputs {
-        gap: 15px;
-    }
-
-    .reformulation-header {
-        padding: 10px 12px;
-    }
-
-    .reformulation-header h4 {
-        font-size: 13px;
-    }
-
-    .copy-reformulation-btn {
-        padding: 8px 12px;
-        font-size: 11px;
-    }
-
-    .reformulation-box {
-        padding: 12px;
-        font-size: 13px;
-        min-height: 100px;
-    }
-
     /* Modales */
     .modal-content {
         width: 95%;

@@ -946,7 +946,7 @@ function initialize() {
     } else {
         // Mode invité - s'assurer que l'interface est correctement configurée
         updateAuthUI(false);
-        showNotification('Mode invité activé - Vos données seront sauvegardées localement', 'info');
+        // Mode invité activé silencieusement
     }
 
     // Optimisations mobiles
