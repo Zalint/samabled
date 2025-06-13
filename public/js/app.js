@@ -239,9 +239,22 @@ function initializeEventListeners() {
     const collapseIcon = document.getElementById('collapseIcon');
     
     if (errorsHeader && errorsList && collapseIcon) {
-        errorsHeader.addEventListener('click', () => {
+        errorsHeader.addEventListener('click', (e) => {
+            // Ne pas déclencher le collapse si on clique sur le bouton copier
+            if (e.target.closest('#copyErrorsBtn')) {
+                return;
+            }
             errorsList.classList.toggle('collapsed');
             collapseIcon.classList.toggle('collapsed');
+        });
+    }
+
+    // Bouton copier explications erreurs
+    const copyErrorsBtn = document.getElementById('copyErrorsBtn');
+    if (copyErrorsBtn) {
+        copyErrorsBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Empêcher le collapse
+            copyAllErrorExplanations();
         });
     }
 
@@ -356,6 +369,7 @@ function updatePlaceholders() {
             input: 'Collez votre texte ici...',
             correct: 'Corriger',
             copy: 'Copier',
+            copyErrors: 'Copier explications erreurs',
             professional: 'Style professionnel',
             normal: 'Style normal',
             casual: 'Style familier',
@@ -416,6 +430,7 @@ function updatePlaceholders() {
             input: 'Paste your text here...',
             correct: 'Correct',
             copy: 'Copy',
+            copyErrors: 'Copy error explanations',
             professional: 'Professional style',
             normal: 'Normal style',
             casual: 'Casual style',
@@ -537,6 +552,12 @@ function updateSectionHeaders(translations) {
         errorsHeader.innerHTML = `${translations.errorsDetected} `;
         if (badge) errorsHeader.appendChild(badge);
         if (icon) errorsHeader.appendChild(icon);
+    }
+    
+    // Update copy errors button text
+    const copyErrorsBtn = document.getElementById('copyErrorsBtn');
+    if (copyErrorsBtn && translations.copyErrors) {
+        copyErrorsBtn.innerHTML = `<i class="fas fa-copy"></i> ${translations.copyErrors}`;
     }
     
     const reformulationHeader = document.querySelector('.reformulation-section h3');
@@ -882,6 +903,7 @@ function displayErrors(errors) {
     const errorsList = elements.errorsList;
     const errorsBadge = document.getElementById('errorsBadge');
     const errorsHeader = document.getElementById('errorsHeader');
+    const copyErrorsBtn = document.getElementById('copyErrorsBtn');
     
     // Mettre à jour le badge
     updateErrorsBadge(errors.length);
@@ -899,7 +921,17 @@ function displayErrors(errors) {
                 <p>${noErrors}</p>
             </div>
         `;
+        
+        // Masquer le bouton copier quand il n'y a pas d'erreurs
+        if (copyErrorsBtn) {
+            copyErrorsBtn.classList.add('hidden');
+        }
         return;
+    }
+
+    // Afficher le bouton copier quand il y a des erreurs
+    if (copyErrorsBtn) {
+        copyErrorsBtn.classList.remove('hidden');
     }
 
     // Get translations for error display
@@ -937,6 +969,54 @@ function displayErrors(errors) {
             </div>
         </div>
     `).join('');
+    
+    // Stocker les erreurs pour la fonction de copie
+    window.currentErrors = errors;
+}
+
+function copyAllErrorExplanations() {
+    if (!window.currentErrors || window.currentErrors.length === 0) {
+        const noErrorsMessage = currentLanguage === 'fr' ? 
+            'Aucune erreur à copier.' : 
+            'No errors to copy.';
+        showNotification(noErrorsMessage, 'warning');
+        return;
+    }
+
+    const incorrectLabel = currentLanguage === 'fr' ? 'Ce qui était incorrect :' : 'What was incorrect:';
+    const beforeLabel = currentLanguage === 'fr' ? 'Avant :' : 'Before:';
+    const afterLabel = currentLanguage === 'fr' ? 'Après :' : 'After:';
+    const errorLabel = currentLanguage === 'fr' ? 'Erreur' : 'Error';
+    
+    let copyText = '';
+    
+    window.currentErrors.forEach((error, index) => {
+        copyText += `${errorLabel} ${index + 1}: ${error.type}\n`;
+        copyText += `${incorrectLabel}\n${error.message}\n`;
+        
+        if (error.original && error.correction && error.original !== error.correction) {
+            copyText += `${beforeLabel} "${error.original}"\n`;
+            copyText += `${afterLabel} "${error.correction}"\n`;
+        }
+        
+        copyText += '\n---\n\n';
+    });
+    
+    // Supprimer le dernier séparateur
+    copyText = copyText.replace(/\n---\n\n$/, '');
+    
+    navigator.clipboard.writeText(copyText).then(() => {
+        const successMessage = currentLanguage === 'fr' ? 
+            'Explications des erreurs copiées dans le presse-papiers !' : 
+            'Error explanations copied to clipboard!';
+        showNotification(successMessage, 'success');
+    }).catch(err => {
+        console.error('Erreur lors de la copie:', err);
+        const errorMessage = currentLanguage === 'fr' ? 
+            'Erreur lors de la copie dans le presse-papiers' : 
+            'Error copying to clipboard';
+        showNotification(errorMessage, 'error');
+    });
 }
 
 function getErrorIcon(severity) {
