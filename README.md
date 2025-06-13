@@ -1,17 +1,36 @@
-# Correcteur de Texte Bilingue
+# 🔤 SamaBled - Correcteur Orthographique et Grammatical
 
-Une application web de correction de texte bilingue (Français/Anglais) utilisant l'API OpenAI pour la correction et la reformulation de texte.
+Une application web moderne de correction orthographique et grammaticale bilingue (Français/Anglais) avec système d'authentification, dashboard utilisateur et historique des corrections.
 
-## Fonctionnalités
+## ✨ Fonctionnalités
 
-- Correction de texte en français et en anglais
-- Options de correction personnalisables
-- Reformulation de texte avec différents styles
-- Système d'authentification
-- Historique des corrections
-- Statistiques d'utilisation
-- Interface responsive
-- Thème clair/sombre
+### 🔧 Correction et Reformulation
+- ✅ Correction orthographique et grammaticale (Français/Anglais)
+- ✅ Options de correction personnalisables
+- ✅ Reformulation avec différents styles (professionnel, normal, familier)
+- ✅ Détection et explication des erreurs
+- ✅ Suggestions d'amélioration
+
+### 👤 Gestion Utilisateur
+- ✅ Système d'authentification complet (inscription, connexion)
+- ✅ Réinitialisation de mot de passe
+- ✅ Profil utilisateur avec email
+- ✅ Mode invité avec stockage local
+
+### 📊 Dashboard et Statistiques
+- ✅ Tableau de bord personnalisé
+- ✅ Statistiques détaillées (corrections, erreurs, progression)
+- ✅ Historique complet des corrections
+- ✅ Analyse des forces et faiblesses
+- ✅ Recommandations personnalisées
+- ✅ Graphiques de progression
+
+### 🎨 Interface Utilisateur
+- ✅ Design moderne et responsive
+- ✅ Thème clair/sombre
+- ✅ Interface mobile optimisée
+- ✅ Animations fluides
+- ✅ Notifications en temps réel
 
 ## Prérequis
 
@@ -55,6 +74,37 @@ npm start
 ```
 
 L'application sera accessible à l'adresse `http://localhost:3000`
+
+## 🌐 Déploiement sur Render
+
+Pour déployer l'application sur Render avec PostgreSQL, consultez le guide détaillé :
+
+**📖 [Guide de Déploiement Complet](DEPLOYMENT.md)**
+
+Le guide couvre :
+- Configuration de la base de données PostgreSQL sur Render
+- Déploiement de l'application web
+- Configuration des variables d'environnement
+- Surveillance et maintenance
+- Dépannage des problèmes courants
+
+### 🚀 Déploiement Rapide
+
+Utilisez le script de déploiement inclus :
+
+```bash
+# Rendre le script exécutable (Linux/Mac)
+chmod +x deploy.sh
+
+# Déployer avec un message
+./deploy.sh "Mise à jour de l'application"
+```
+
+### 🔗 Liens Utiles
+
+- **Application Live** : `https://samabled-app.onrender.com`
+- **Dashboard Render** : `https://dashboard.render.com`
+- **Repository GitHub** : `https://github.com/Zalint/samabled`
 
 ## Structure du Projet
 

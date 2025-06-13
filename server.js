@@ -34,19 +34,48 @@ function authenticateToken(req, res, next) {
 }
 
 const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Configuration pour la production
+if (process.env.NODE_ENV === 'production') {
+    app.use(helmet({
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'"],
+                styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+                scriptSrc: ["'self'", "'unsafe-inline'"],
+                fontSrc: ["'self'", "https://cdnjs.cloudflare.com"],
+                imgSrc: ["'self'", "data:", "https:"],
+                connectSrc: ["'self'"]
+            }
+        }
+    }));
+    
+    // Rate limiting plus strict en production
+    const limiter = rateLimit({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        max: 100, // limite chaque IP à 100 requêtes par windowMs
+        message: 'Trop de requêtes depuis cette IP, veuillez réessayer plus tard.'
+    });
+    app.use(limiter);
+} else {
+    app.use(helmet());
+    
+    // Rate limiting plus permissif en développement
+    const limiter = rateLimit({
+        windowMs: process.env.RATE_LIMIT_WINDOW_MS || 900000,
+        max: process.env.RATE_LIMIT_MAX_REQUESTS || 1000
+    });
+    app.use(limiter);
+}
 
 // Middleware
-app.use(helmet());
-app.use(cors());
-app.use(express.json());
-app.use(express.static('public'));
-
-// Rate limiting
-const limiter = rateLimit({
-    windowMs: process.env.RATE_LIMIT_WINDOW_MS || 900000,
-    max: process.env.RATE_LIMIT_MAX_REQUESTS || 100
-});
-app.use(limiter);
+app.use(cors({
+    origin: process.env.CORS_ORIGIN || '*',
+    credentials: true
+}));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
 app.use('/api', apiRoutes);
@@ -289,6 +318,11 @@ async function generateAnalysis(commonErrors, stats, userId) {
     return analysis;
 }
 
+// Route pour servir l'application (catch-all pour SPA)
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
@@ -298,7 +332,9 @@ app.use((err, req, res, next) => {
     });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+// Démarrage du serveur
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Serveur SamaBled démarré sur le port ${PORT}`);
+    console.log(`📊 Environnement: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🗄️ Base de données: ${process.env.DATABASE_URL ? 'Connectée' : 'Non configurée'}`);
 }); 
