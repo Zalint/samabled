@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=5.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Correcteur Bilingue">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#4a90e2">
+    <title>Correcteur de Texte Bilingue</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- En-tête -->
+        <header>
+            <nav>
+                <div class="logo">Correcteur Bilingue</div>
+                <div class="nav-links">
+                    <div id="authButtons" class="auth-buttons">
+                        <button id="loginBtn">Connexion</button>
+                        <button id="registerBtn">Inscription</button>
+                    </div>
+                    <div id="userMenu" class="user-menu hidden">
+                        <div class="user-info">
+                            <i class="fas fa-user-circle"></i>
+                            <span id="userEmail">utilisateur@email.com</span>
+                        </div>
+                        <button id="dashboardBtn" class="dashboard-btn">
+                            <i class="fas fa-chart-line"></i>
+                            Tableau de bord
+                        </button>
+                        <button id="changePasswordBtn" class="change-password-btn">
+                            <i class="fas fa-key"></i>
+                            Changer le mot de passe
+                        </button>
+                        <button id="logoutBtn" class="logout-btn">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Déconnexion
+                        </button>
+                    </div>
+                    <button id="guestHistoryBtn" class="guest-history-btn hidden">
+                        <i class="fas fa-history"></i>
+                        Historique
+                    </button>
+                    <button id="themeToggle"><i class="fas fa-moon"></i></button>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Contenu principal -->
+        <main>
+            <!-- Sélecteur de langue -->
+            <div class="language-selector">
+                <button class="active" data-lang="fr">Français</button>
+                <button data-lang="en">English</button>
+            </div>
+
+            <!-- Zone de texte -->
+            <div class="text-area-container">
+                <div class="input-section">
+                    <textarea id="inputText" placeholder="Collez votre texte ici..."></textarea>
+                    <div class="text-stats">
+                        <span id="wordCount">0 mots</span>
+                        <span id="charCount">0 caractères</span>
+                    </div>
+                    <div class="correction-options">
+                        <label><input type="checkbox" id="ignoreAccents"> Ignorer les accents</label>
+                        <label><input type="checkbox" id="ignoreCase"> Ignorer les majuscules</label>
+                        <label><input type="checkbox" id="ignoreProperNouns"> Ignorer les noms propres</label>
+                    </div>
+                    <button id="correctBtn" class="primary-btn">Corriger</button>
+                </div>
+
+                <div class="output-section">
+                    <div class="corrected-text">
+                        <h3>Texte corrigé</h3>
+                        <div id="correctedText" class="text-output"></div>
+                        <button id="copyBtn" class="secondary-btn"><i class="fas fa-copy"></i> Copier</button>
+                    </div>
+                    <div class="errors-list">
+                        <div class="errors-header" id="errorsHeader">
+                            <h3>
+                                Erreurs détectées 
+                                <span id="errorsBadge" class="errors-badge hidden">0</span>
+                                <i class="fas fa-chevron-down collapse-icon" id="collapseIcon"></i>
+                            </h3>
+                        </div>
+                        <div id="errorsList" class="errors-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section de reformulation -->
+            <div class="reformulation-section">
+                <h3>Reformulation</h3>
+                <div class="style-buttons">
+                    <button data-style="professional">Style professionnel</button>
+                    <button data-style="normal">Style normal</button>
+                    <button data-style="casual">Style familier</button>
+                </div>
+                <div class="reformulation-outputs">
+                    <div class="reformulation-container">
+                        <div class="reformulation-header">
+                            <h4>Style professionnel</h4>
+                            <button class="copy-reformulation-btn" data-target="professionalOutput">
+                                <i class="fas fa-copy"></i> Copier
+                            </button>
+                        </div>
+                        <div class="reformulation-box" id="professionalOutput"></div>
+                    </div>
+                    <div class="reformulation-container">
+                        <div class="reformulation-header">
+                            <h4>Style normal</h4>
+                            <button class="copy-reformulation-btn" data-target="normalOutput">
+                                <i class="fas fa-copy"></i> Copier
+                            </button>
+                        </div>
+                        <div class="reformulation-box" id="normalOutput"></div>
+                    </div>
+                    <div class="reformulation-container">
+                        <div class="reformulation-header">
+                            <h4>Style familier</h4>
+                            <button class="copy-reformulation-btn" data-target="casualOutput">
+                                <i class="fas fa-copy"></i> Copier
+                            </button>
+                        </div>
+                        <div class="reformulation-box" id="casualOutput"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Panneau latéral historique invité -->
+        <div id="guestHistoryPanel" class="guest-history-panel">
+            <div class="guest-history-header">
+                <h3><i class="fas fa-history"></i> Historique local</h3>
+                <button id="closeGuestHistory" class="close-guest-history">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="guest-history-content">
+                <div class="guest-history-stats">
+                    <div class="guest-stat">
+                        <span class="guest-stat-number" id="guestTotalCorrections">0</span>
+                        <span class="guest-stat-label">Corrections</span>
+                    </div>
+                    <div class="guest-stat">
+                        <span class="guest-stat-number" id="guestTotalErrors">0</span>
+                        <span class="guest-stat-label">Erreurs</span>
+                    </div>
+                </div>
+                <div class="guest-history-actions">
+                    <button id="clearGuestHistory" class="clear-history-btn">
+                        <i class="fas fa-trash"></i> Effacer l'historique
+                    </button>
+                </div>
+                <div id="guestHistoryList" class="guest-history-list">
+                    <!-- Les éléments d'historique seront ajoutés ici -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Modales -->
+        <div id="loginModal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal" data-modal="loginModal">&times;</span>
+                <h2>Connexion</h2>
+                <form id="loginForm">
+                    <input type="email" name="email" placeholder="Email" required autocomplete="email">
+                    <div class="password-input-container">
+                        <input type="password" name="password" placeholder="Mot de passe" required autocomplete="current-password">
+                        <button type="button" class="toggle-password" aria-label="Afficher/masquer le mot de passe">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <button type="submit">Se connecter</button>
+                </form>
+                <div class="modal-footer">
+                    <a href="#" id="forgotPasswordLink" class="forgot-password-link">
+                        <i class="fas fa-key"></i> Mot de passe oublié ?
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div id="registerModal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal" data-modal="registerModal">&times;</span>
+                <h2>Inscription</h2>
+                <form id="registerForm">
+                    <input type="email" name="email" placeholder="Email" required autocomplete="email">
+                    <div class="password-input-container">
+                        <input type="password" name="password" placeholder="Mot de passe (min. 6 caractères)" required minlength="6" autocomplete="new-password">
+                        <button type="button" class="toggle-password" aria-label="Afficher/masquer le mot de passe">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="password-input-container">
+                        <input type="password" name="confirmPassword" placeholder="Confirmer le mot de passe" required minlength="6" autocomplete="new-password">
+                        <button type="button" class="toggle-password" aria-label="Afficher/masquer le mot de passe">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <button type="submit">S'inscrire</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tableau de bord -->
+        <div id="dashboardModal" class="modal dashboard-modal">
+            <div class="modal-content dashboard-content">
+                <span class="close-modal" data-modal="dashboardModal">&times;</span>
+                <h2><i class="fas fa-chart-line"></i> Tableau de bord</h2>
+                
+                <!-- Onglets -->
+                <div class="dashboard-tabs">
+                    <button class="tab-btn active" data-tab="overview">Vue d'ensemble</button>
+                    <button class="tab-btn" data-tab="history">Historique</button>
+                    <button class="tab-btn" data-tab="progress">Progression</button>
+                    <button class="tab-btn" data-tab="analysis">Analyse</button>
+                </div>
+
+                <!-- Contenu des onglets -->
+                <div class="dashboard-content-area">
+                    <!-- Vue d'ensemble -->
+                    <div id="overview-tab" class="tab-content active">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
+                                <div class="stat-info">
+                                    <h3 id="totalCorrections">0</h3>
+                                    <p>Textes corrigés</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                                <div class="stat-info">
+                                    <h3 id="totalErrors">0</h3>
+                                    <p>Erreurs détectées</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                                <div class="stat-info">
+                                    <h3 id="averageErrors">0</h3>
+                                    <p>Erreurs par texte</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon"><i class="fas fa-trophy"></i></div>
+                                <div class="stat-info">
+                                    <h3 id="improvementRate">0%</h3>
+                                    <p>Amélioration</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-section">
+                            <h3>Erreurs les plus fréquentes</h3>
+                            <div id="commonErrors" class="common-errors"></div>
+                        </div>
+
+                        <div class="dashboard-section">
+                            <h3>Recommandations personnalisées</h3>
+                            <div id="recommendations" class="recommendations"></div>
+                        </div>
+                    </div>
+
+                    <!-- Historique -->
+                    <div id="history-tab" class="tab-content">
+                        <div class="history-filters">
+                            <select id="historyFilter">
+                                <option value="all">Tous les textes</option>
+                                <option value="week">Cette semaine</option>
+                                <option value="month">Ce mois</option>
+                                <option value="year">Cette année</option>
+                            </select>
+                            <input type="search" id="historySearch" placeholder="Rechercher dans l'historique...">
+                        </div>
+                        <div id="historyList" class="history-list"></div>
+                    </div>
+
+                    <!-- Progression -->
+                    <div id="progress-tab" class="tab-content">
+                        <div class="progress-section">
+                            <h3>Évolution des erreurs</h3>
+                            <div id="progressChart" class="chart-container">
+                                <canvas id="evolutionChart" width="500" height="300"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="progress-section">
+                            <h3>Répartition par type d'erreur</h3>
+                            <div id="errorTypesChart" class="chart-container">
+                                <canvas id="typesChart" width="500" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Analyse -->
+                    <div id="analysis-tab" class="tab-content">
+                        <div class="analysis-section">
+                            <h3><i class="fas fa-thumbs-up"></i> Points forts</h3>
+                            <div id="strengths" class="analysis-list"></div>
+                        </div>
+                        
+                        <div class="analysis-section">
+                            <h3><i class="fas fa-target"></i> Points à améliorer</h3>
+                            <div id="weaknesses" class="analysis-list"></div>
+                        </div>
+                        
+                        <div class="analysis-section">
+                            <h3><i class="fas fa-lightbulb"></i> Conseils personnalisés</h3>
+                            <div id="personalizedTips" class="tips-list"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modale de changement de mot de passe -->
+        <div id="changePasswordModal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal" data-modal="changePasswordModal">&times;</span>
+                <h2><i class="fas fa-key"></i> Changer le mot de passe</h2>
+                <form id="changePasswordForm">
+                    <div class="password-input-container">
+                        <input type="password" name="currentPassword" placeholder="Mot de passe actuel" required autocomplete="current-password">
+                        <button type="button" class="toggle-password" aria-label="Afficher/masquer le mot de passe">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="password-input-container">
+                        <input type="password" name="newPassword" placeholder="Nouveau mot de passe (min. 6 caractères)" required minlength="6" autocomplete="new-password">
+                        <button type="button" class="toggle-password" aria-label="Afficher/masquer le mot de passe">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="password-input-container">
+                        <input type="password" name="confirmNewPassword" placeholder="Confirmer le nouveau mot de passe" required minlength="6" autocomplete="new-password">
+                        <button type="button" class="toggle-password" aria-label="Afficher/masquer le mot de passe">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <button type="submit">Changer le mot de passe</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modale de réinitialisation de mot de passe -->
+        <div id="resetPasswordModal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal" data-modal="resetPasswordModal">&times;</span>
+                <h2><i class="fas fa-unlock-alt"></i> Réinitialiser le mot de passe</h2>
+                <p class="reset-description">
+                    Entrez votre adresse email et votre nouveau mot de passe souhaité.
+                    <br><small><strong>Note :</strong> Cette fonctionnalité est disponible uniquement en mode développement.</small>
+                </p>
+                <form id="resetPasswordForm">
+                    <input type="email" name="email" placeholder="Votre adresse email" required autocomplete="email">
+                    <div class="password-input-container">
+                        <input type="password" name="newPassword" placeholder="Nouveau mot de passe (min. 6 caractères)" required minlength="6" autocomplete="new-password">
+                        <button type="button" class="toggle-password" aria-label="Afficher/masquer le mot de passe">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="password-input-container">
+                        <input type="password" name="confirmPassword" placeholder="Confirmer le nouveau mot de passe" required minlength="6" autocomplete="new-password">
+                        <button type="button" class="toggle-password" aria-label="Afficher/masquer le mot de passe">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <button type="submit" class="reset-btn">Réinitialiser le mot de passe</button>
+                </form>
+                <div class="modal-footer">
+                    <a href="#" id="backToLoginLink" class="back-to-login-link">
+                        <i class="fas fa-arrow-left"></i> Retour à la connexion
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modale de confirmation personnalisée -->
+        <div id="confirmModal" class="modal">
+            <div class="modal-content confirm-modal-content">
+                <div class="confirm-header">
+                    <i class="fas fa-question-circle"></i>
+                    <h3 id="confirmTitle">Confirmation</h3>
+                </div>
+                <div class="confirm-body">
+                    <p id="confirmMessage">Êtes-vous sûr de vouloir continuer ?</p>
+                </div>
+                <div class="confirm-actions">
+                    <button id="confirmCancel" class="btn-secondary">Annuler</button>
+                    <button id="confirmOk" class="btn-primary">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html> 
