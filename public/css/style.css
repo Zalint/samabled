@@ -1,10 +1,13 @@
 :root {
     /* Variables pour le thème clair */
     --primary-color: #4a90e2;
+    --primary-hover: #357abd;
     --secondary-color: #2c3e50;
     --background-color: #ffffff;
     --text-color: #333333;
+    --text-secondary: #666666;
     --border-color: #e0e0e0;
+    --hover-color: #f5f5f5;
     --error-severe: #ff4444;
     --error-medium: #ffa726;
     --error-minor: #66bb6a;
@@ -13,10 +16,13 @@
 
 [data-theme="dark"] {
     --primary-color: #64b5f6;
+    --primary-hover: #42a5f5;
     --secondary-color: #90caf9;
     --background-color: #1a1a1a;
     --text-color: #ffffff;
+    --text-secondary: #aaaaaa;
     --border-color: #404040;
+    --hover-color: #2a2a2a;
     --error-severe: #ff5252;
     --error-medium: #ffb74d;
     --error-minor: #81c784;
@@ -650,6 +656,8 @@ textarea {
 .toggle-password {
     position: absolute;
     right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
     background: none;
     border: none;
     cursor: pointer;
@@ -663,20 +671,34 @@ textarea {
     justify-content: center;
     width: 32px;
     height: 32px;
+    z-index: 10;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 
 .toggle-password:hover {
     color: var(--primary-color);
     background-color: var(--hover-color);
+    transform: translateY(-50%) scale(1.05);
 }
 
 .toggle-password:focus {
     outline: 2px solid var(--primary-color);
     outline-offset: 2px;
+    background-color: var(--hover-color);
+}
+
+.toggle-password:active {
+    transform: translateY(-50%) scale(0.95);
+    background-color: var(--primary-color);
+    color: white;
 }
 
 .toggle-password i {
-    transition: transform 0.2s ease;
+    transition: transform 0.1s ease;
+    pointer-events: none;
 }
 
 .toggle-password:active i {

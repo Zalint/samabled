@@ -227,7 +227,9 @@ function initializeEventListeners() {
     // Gestion de la visibilité des mots de passe
     document.querySelectorAll('.toggle-password').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            togglePasswordVisibility(e.target);
+            e.preventDefault();
+            e.stopPropagation();
+            togglePasswordVisibility(btn);
         });
     });
 
@@ -736,6 +738,25 @@ async function handleRegister(e) {
 // Fonctions utilitaires
 function showModal(modal) {
     modal.style.display = 'block';
+    
+    // Réinitialiser l'état des boutons toggle password dans cette modale
+    const toggleButtons = modal.querySelectorAll('.toggle-password');
+    toggleButtons.forEach(button => {
+        const container = button.closest('.password-input-container');
+        if (container) {
+            const passwordInput = container.querySelector('input');
+            const icon = button.querySelector('i');
+            
+            if (passwordInput && icon) {
+                // Forcer le type password et l'icône eye
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+                button.setAttribute('aria-label', 'Afficher le mot de passe');
+                button.setAttribute('title', 'Afficher le mot de passe');
+            }
+        }
+    });
 }
 
 function hideModal(modal) {
@@ -1004,15 +1025,27 @@ document.addEventListener('DOMContentLoaded', initialize);
 function togglePasswordVisibility(button) {
     // Trouver le conteneur parent
     const container = button.closest('.password-input-container');
-    if (!container) return;
+    if (!container) {
+        console.warn('Container .password-input-container non trouvé');
+        return;
+    }
     
     // Trouver l'input de mot de passe
     const passwordInput = container.querySelector('input[type="password"], input[type="text"]');
-    if (!passwordInput) return;
+    if (!passwordInput) {
+        console.warn('Input de mot de passe non trouvé');
+        return;
+    }
     
     // Trouver l'icône
     const icon = button.querySelector('i');
-    if (!icon) return;
+    if (!icon) {
+        console.warn('Icône non trouvée dans le bouton');
+        return;
+    }
+    
+    // Forcer le focus sur l'input pour éviter les problèmes de timing
+    const cursorPosition = passwordInput.selectionStart;
     
     // Basculer le type d'input et l'icône
     if (passwordInput.type === 'password') {
@@ -1020,12 +1053,20 @@ function togglePasswordVisibility(button) {
         icon.classList.remove('fa-eye');
         icon.classList.add('fa-eye-slash');
         button.setAttribute('aria-label', 'Masquer le mot de passe');
+        button.setAttribute('title', 'Masquer le mot de passe');
     } else {
         passwordInput.type = 'password';
         icon.classList.remove('fa-eye-slash');
         icon.classList.add('fa-eye');
         button.setAttribute('aria-label', 'Afficher le mot de passe');
+        button.setAttribute('title', 'Afficher le mot de passe');
     }
+    
+    // Restaurer la position du curseur et le focus
+    setTimeout(() => {
+        passwordInput.focus();
+        passwordInput.setSelectionRange(cursorPosition, cursorPosition);
+    }, 0);
 }
 
 // Fonction de déconnexion
