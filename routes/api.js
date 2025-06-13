@@ -620,4 +620,76 @@ router.get('/text-errors/:textId', authenticateToken, async (req, res) => {
     }
 });
 
+// Route pour obtenir les détails complets d'un texte (original, corrigé, erreurs)
+router.get('/text-details/:textId', authenticateToken, async (req, res) => {
+    try {
+        const textId = req.params.textId;
+        const userId = req.user.id;
+        
+        console.log('🔍 RÉCUPÉRATION - Demande détails complets pour text_id:', textId, 'user_id:', userId);
+        
+        // Récupérer le texte original et corrigé
+        const textResult = await db.query(
+            'SELECT id, original_text, corrected_text, error_count, language FROM corrected_texts WHERE id = $1 AND user_id = $2',
+            [textId, userId]
+        );
+        
+        if (textResult.rows.length === 0) {
+            console.log('❌ RÉCUPÉRATION - Texte non trouvé pour text_id:', textId, 'user_id:', userId);
+            return res.status(404).json({ error: 'Texte non trouvé' });
+        }
+        
+        const textData = textResult.rows[0];
+        console.log('✅ RÉCUPÉRATION - Texte trouvé:', {
+            id: textData.id,
+            error_count: textData.error_count,
+            language: textData.language,
+            original_length: textData.original_text?.length || 0,
+            corrected_length: textData.corrected_text?.length || 0
+        });
+        
+        // Récupérer les erreurs associées
+        const errorsResult = await db.query(
+            `SELECT 
+                id,
+                error_type,
+                error_message,
+                severity,
+                position_start,
+                position_end,
+                original_word,
+                corrected_word,
+                explanation
+             FROM errors 
+             WHERE text_id = $1
+             ORDER BY position_start ASC`,
+            [textId]
+        );
+
+        console.log('✅ RÉCUPÉRATION - Erreurs récupérées:', errorsResult.rows.length);
+
+        res.json({
+            id: textData.id,
+            originalText: textData.original_text,
+            correctedText: textData.corrected_text,
+            errorCount: textData.error_count,
+            language: textData.language,
+            errors: errorsResult.rows.map(error => ({
+                id: error.id,
+                type: error.error_type,
+                message: error.error_message,
+                severity: error.severity,
+                position_start: error.position_start,
+                position_end: error.position_end,
+                original: error.original_word,
+                correction: error.corrected_word,
+                explanation: error.explanation
+            }))
+        });
+    } catch (error) {
+        console.error('❌ RÉCUPÉRATION - Erreur lors de la récupération des détails du texte:', error);
+        res.status(500).json({ error: 'Erreur lors de la récupération des détails du texte' });
+    }
+});
+
 module.exports = router; 

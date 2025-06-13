@@ -794,6 +794,88 @@ textarea {
     border-bottom: 2px solid var(--suggestion);
 }
 
+/* Styles améliorés pour les erreurs surlignées */
+.error-highlight {
+    cursor: help;
+    transition: all 0.2s ease;
+}
+
+.error-highlight:hover {
+    transform: scale(1.02);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.error-highlight.error-highlight-severe {
+    background-color: rgba(255, 68, 68, 0.25);
+    border-bottom: 2px solid var(--error-severe);
+    border-left: 3px solid var(--error-severe);
+}
+
+.error-highlight.error-highlight-medium {
+    background-color: rgba(255, 167, 38, 0.25);
+    border-bottom: 2px solid var(--error-medium);
+    border-left: 3px solid var(--error-medium);
+}
+
+.error-highlight.error-highlight-minor {
+    background-color: rgba(102, 187, 106, 0.25);
+    border-bottom: 2px solid var(--error-minor);
+    border-left: 3px solid var(--error-minor);
+}
+
+.error-highlight.error-highlight-suggestion {
+    background-color: rgba(66, 165, 245, 0.25);
+    border-bottom: 2px solid var(--suggestion);
+    border-left: 3px solid var(--suggestion);
+}
+
+/* Section texte original avec erreurs surlignées */
+.original-highlighted-section {
+    background-color: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.original-highlighted-section h3 {
+    margin-bottom: 15px;
+    color: var(--text-color);
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.original-highlighted-section h3::before {
+    content: '📝';
+    font-size: 20px;
+}
+
+.original-text-highlighted {
+    background-color: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 15px;
+    min-height: 100px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-color);
+    font-family: inherit;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.original-text-highlighted p {
+    margin: 0;
+    line-height: 1.6;
+}
+
+[data-theme="dark"] .original-text-highlighted {
+    background-color: var(--background-color);
+    border-color: var(--border-color);
+}
+
 .correction-note {
     font-size: 0.85em;
     color: #666;

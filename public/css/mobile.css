@@ -174,6 +174,43 @@
         min-width: 80px;
         white-space: nowrap;
     }
+
+    /* Optimisations dashboard mobile */
+    .original-highlighted-section {
+        padding: 12px;
+        margin-bottom: 15px;
+    }
+
+    .original-highlighted-section h3 {
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
+
+    .original-text-highlighted {
+        padding: 10px;
+        font-size: 14px;
+        min-height: 80px;
+    }
+
+    .history-details-content h4 {
+        font-size: 14px;
+        margin: 15px 0 8px 0;
+    }
+
+    .original-text-full {
+        padding: 10px;
+        font-size: 14px;
+        background-color: var(--background-color);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        margin-bottom: 15px;
+    }
+
+    .error-highlight {
+        padding: 1px 3px;
+        border-radius: 2px;
+        font-size: 13px;
+    }
 }
 
 @supports (-webkit-touch-callout: none) {

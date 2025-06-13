@@ -448,9 +448,48 @@ async function handleCorrection() {
 }
 
 function displayCorrection(data) {
-    // Afficher seulement le texte corrigé, sans annotations
+    // Afficher le texte corrigé
     elements.correctedText.textContent = data.correctedText;
+    
+    // Afficher le texte original avec erreurs surlignées
+    displayOriginalWithHighlights(data.originalText, data.errors);
+    
+    // Afficher la liste des erreurs
     displayErrors(data.errors);
+}
+
+function displayOriginalWithHighlights(originalText, errors) {
+    const originalTextContainer = document.getElementById('originalTextHighlighted');
+    if (!originalTextContainer) return;
+    
+    if (!errors || errors.length === 0) {
+        originalTextContainer.innerHTML = `<p>${originalText}</p>`;
+        return;
+    }
+    
+    // Créer une copie du texte pour le surlignage
+    let highlightedText = originalText;
+    
+    // Trier les erreurs par position pour éviter les conflits
+    const sortedErrors = [...errors].sort((a, b) => (b.positionStart || 0) - (a.positionStart || 0));
+    
+    // Appliquer le surlignage pour chaque erreur
+    sortedErrors.forEach(error => {
+        if (error.positionStart !== undefined && error.positionEnd !== undefined && 
+            error.positionStart >= 0 && error.positionEnd > error.positionStart) {
+            
+            const before = highlightedText.substring(0, error.positionStart);
+            const errorText = highlightedText.substring(error.positionStart, error.positionEnd);
+            const after = highlightedText.substring(error.positionEnd);
+            
+            const severityClass = `error-highlight-${error.severity || 'medium'}`;
+            const highlightedError = `<span class="error-highlight ${severityClass}" title="${error.message}">${errorText}</span>`;
+            
+            highlightedText = before + highlightedError + after;
+        }
+    });
+    
+    originalTextContainer.innerHTML = `<p>${highlightedText}</p>`;
 }
 
 function highlightErrors(text, errors) {
@@ -1303,6 +1342,16 @@ function renderHistory(filteredData = null) {
                     <h4><i class="fas fa-file-alt"></i> Texte original complet</h4>
                     <div class="original-text-full">${item.original_text}</div>
                     
+                    <h4><i class="fas fa-highlight"></i> Texte original avec erreurs surlignées</h4>
+                    <div id="original-highlighted-${item.id}" class="original-text-highlighted">
+                        <div class="loading-errors">Chargement du texte avec erreurs surlignées...</div>
+                    </div>
+                    
+                    <h4><i class="fas fa-check-circle"></i> Texte corrigé</h4>
+                    <div id="corrected-text-${item.id}" class="original-text-highlighted">
+                        <div class="loading-errors">Chargement du texte corrigé...</div>
+                    </div>
+                    
                     <div class="error-details-section">
                         <h4><i class="fas fa-exclamation-triangle"></i> Détails des erreurs détectées</h4>
                         <div id="error-details-${item.id}" class="error-details-list">
@@ -1328,6 +1377,8 @@ async function toggleHistoryDetails(itemId) {
     const detailsElement = document.getElementById(`details-${itemId}`);
     const toggleIcon = document.getElementById(`toggle-${itemId}`);
     const errorDetailsContainer = document.getElementById(`error-details-${itemId}`);
+    const originalHighlightedContainer = document.getElementById(`original-highlighted-${itemId}`);
+    const correctedTextContainer = document.getElementById(`corrected-text-${itemId}`);
     
     if (detailsElement.style.display === 'none') {
         // Ouvrir les détails
@@ -1338,10 +1389,69 @@ async function toggleHistoryDetails(itemId) {
         if (errorDetailsContainer.innerHTML.includes('Chargement des détails...')) {
             await loadErrorDetails(itemId, errorDetailsContainer);
         }
+        
+        // Charger le texte avec erreurs surlignées et le texte corrigé
+        if (originalHighlightedContainer.innerHTML.includes('Chargement du texte avec erreurs surlignées...')) {
+            await loadTextDetails(itemId, originalHighlightedContainer, correctedTextContainer);
+        }
     } else {
         // Fermer les détails
         detailsElement.style.display = 'none';
         toggleIcon.classList.remove('rotated');
+    }
+}
+
+// Fonction pour charger le texte avec erreurs surlignées et le texte corrigé
+async function loadTextDetails(textId, originalHighlightedContainer, correctedTextContainer) {
+    try {
+        // Récupérer les données du texte depuis l'API
+        const response = await fetch(`${API_URL}/text-details/${textId}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Erreur lors du chargement des détails du texte');
+        }
+        
+        const textDetails = await response.json();
+        
+        // Afficher le texte corrigé
+        correctedTextContainer.innerHTML = `<p>${textDetails.correctedText || 'Texte corrigé non disponible'}</p>`;
+        
+        // Afficher le texte original avec erreurs surlignées
+        if (textDetails.errors && textDetails.errors.length > 0) {
+            let highlightedText = textDetails.originalText;
+            
+            // Trier les erreurs par position pour éviter les conflits
+            const sortedErrors = [...textDetails.errors].sort((a, b) => (b.position_start || 0) - (a.position_start || 0));
+            
+            // Appliquer le surlignage pour chaque erreur
+            sortedErrors.forEach(error => {
+                if (error.position_start !== undefined && error.position_end !== undefined && 
+                    error.position_start >= 0 && error.position_end > error.position_start) {
+                    
+                    const before = highlightedText.substring(0, error.position_start);
+                    const errorText = highlightedText.substring(error.position_start, error.position_end);
+                    const after = highlightedText.substring(error.position_end);
+                    
+                    const severityClass = `error-highlight-${error.severity || 'medium'}`;
+                    const highlightedError = `<span class="error-highlight ${severityClass}" title="${error.error_message || error.message}">${errorText}</span>`;
+                    
+                    highlightedText = before + highlightedError + after;
+                }
+            });
+            
+            originalHighlightedContainer.innerHTML = `<p>${highlightedText}</p>`;
+        } else {
+            originalHighlightedContainer.innerHTML = `<p>${textDetails.originalText}</p>`;
+        }
+        
+    } catch (error) {
+        console.error('Erreur chargement détails du texte:', error);
+        originalHighlightedContainer.innerHTML = '<p class="error-loading">Erreur lors du chargement du texte avec erreurs surlignées</p>';
+        correctedTextContainer.innerHTML = '<p class="error-loading">Erreur lors du chargement du texte corrigé</p>';
     }
 }
 
