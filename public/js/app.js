@@ -787,6 +787,12 @@ async function handleCorrection() {
         }
 
         const data = await response.json();
+        
+        // DEBUG: Vérifier la structure des données reçues
+        console.log('📋 DEBUG - Données reçues du serveur:', data);
+        console.log('📋 DEBUG - Type de correctedText:', typeof data.correctedText);
+        console.log('📋 DEBUG - Contenu correctedText:', data.correctedText?.substring(0, 100) + '...');
+        
         displayCorrection(data);
 
         // Sauvegarder en localStorage si mode invité
@@ -817,8 +823,25 @@ async function handleCorrection() {
 }
 
 function displayCorrection(data) {
+    // Vérifier si le texte corrigé contient du JSON malformé
+    let correctedText = data.correctedText;
+    
+    // Si le correctedText semble être du JSON, essayer de l'extraire
+    if (correctedText && correctedText.includes('{"correctedText":')) {
+        console.warn('⚠️ CORRECTION - Texte corrigé contient du JSON, extraction...');
+        try {
+            const jsonMatch = correctedText.match(/"correctedText":\s*"([^"]+)"/);
+            if (jsonMatch && jsonMatch[1]) {
+                correctedText = jsonMatch[1];
+                console.log('✅ CORRECTION - Texte extrait avec succès:', correctedText.substring(0, 50) + '...');
+            }
+        } catch (e) {
+            console.error('❌ CORRECTION - Impossible d\'extraire le texte:', e);
+        }
+    }
+    
     // Afficher le texte corrigé
-    elements.correctedText.textContent = data.correctedText;
+    elements.correctedText.textContent = correctedText;
     
     // Afficher/masquer la section "Texte original avec erreurs surlignées" selon s'il y a des erreurs
     const originalHighlightSection = document.querySelector('.original-highlighted-section');
@@ -849,12 +872,11 @@ function displayOriginalWithHighlights(originalText, errors) {
     }
     
     if (!errors || errors.length === 0) {
-        originalTextContainer.innerHTML = `<p>${originalText}</p>`;
+        // Échapper le texte pour éviter les problèmes d'affichage HTML
+        const escapedText = escapeHtml(originalText);
+        originalTextContainer.innerHTML = `<p>${escapedText}</p>`;
         return;
     }
-    
-    // Créer une copie du texte pour le surlignage
-    let highlightedText = originalText;
     
     // Dédupliquer les erreurs qui ont les mêmes positions
     const uniqueErrors = [];
@@ -871,27 +893,50 @@ function displayOriginalWithHighlights(originalText, errors) {
     // Trier les erreurs par position pour éviter les conflits (de la fin vers le début)
     const sortedErrors = uniqueErrors.sort((a, b) => (b.positionStart || 0) - (a.positionStart || 0));
     
-    // Appliquer le surlignage pour chaque erreur
-    sortedErrors.forEach(error => {
+    // Approche sécurisée : construire le HTML directement avec échappement
+    let result = '';
+    let lastIndex = 0;
+    
+    // Trier par position croissante pour traiter dans l'ordre
+    const sortedForwardErrors = [...sortedErrors].sort((a, b) => (a.positionStart || 0) - (b.positionStart || 0));
+    
+    sortedForwardErrors.forEach(error => {
         if (error.positionStart !== undefined && error.positionEnd !== undefined && 
-            error.positionStart >= 0 && error.positionEnd > error.positionStart) {
+            error.positionStart >= 0 && error.positionEnd > error.positionStart &&
+            error.positionStart >= lastIndex) {
             
-            const before = highlightedText.substring(0, error.positionStart);
-            const errorText = highlightedText.substring(error.positionStart, error.positionEnd);
-            const after = highlightedText.substring(error.positionEnd);
+            // Ajouter le texte avant l'erreur (échappé)
+            const beforeText = originalText.substring(lastIndex, error.positionStart);
+            result += escapeHtml(beforeText);
             
+            // Ajouter l'erreur surlignée
+            const errorText = originalText.substring(error.positionStart, error.positionEnd);
             const severityClass = `error-highlight-${error.severity || 'medium'}`;
             const correctionLabel = currentLanguage === 'fr' ? 'Correction' : 'Correction';
             const tooltipText = error.correction ? `${correctionLabel}: ${error.correction}` : error.message;
-            // Échapper les caractères spéciaux dans le title
-            const escapedTooltip = tooltipText ? tooltipText.replace(/"/g, '&quot;').replace(/'/g, '&#39;') : '';
-            const highlightedError = `<span class="error-highlight ${severityClass}" title="${escapedTooltip}">${errorText}</span>`;
+            const escapedTooltip = tooltipText ? escapeHtml(tooltipText) : '';
+            const escapedErrorText = escapeHtml(errorText);
             
-            highlightedText = before + highlightedError + after;
+            result += `<span class="error-highlight ${severityClass}" title="${escapedTooltip}">${escapedErrorText}</span>`;
+            
+            lastIndex = error.positionEnd;
         }
     });
     
-    originalTextContainer.innerHTML = `<p>${highlightedText}</p>`;
+    // Ajouter le reste du texte après la dernière erreur (échappé)
+    if (lastIndex < originalText.length) {
+        result += escapeHtml(originalText.substring(lastIndex));
+    }
+    
+    originalTextContainer.innerHTML = `<p>${result}</p>`;
+}
+
+// Fonction utilitaire pour échapper le HTML et protéger contre les attaques XSS
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 function highlightErrors(text, errors) {
@@ -1855,14 +1900,14 @@ function renderHistory(filteredData = null) {
                 </div>
                 <i class="fas fa-chevron-down history-toggle" id="toggle-${item.id}"></i>
             </div>
-            <div class="history-text">${truncateText(item.original_text, 150)}</div>
+            <div class="history-text">${escapeHtml(truncateText(item.original_text, 150))}</div>
             <div class="history-summary">
                 ${(item.error_types || []).map(type => `<span class="error-tag">${type}</span>`).join('')}
             </div>
             <div class="history-details" id="details-${item.id}" style="display: none;">
                 <div class="history-details-content">
                     <h4><i class="fas fa-file-alt"></i> Texte original complet</h4>
-                    <div class="original-text-full">${item.original_text}</div>
+                    <div class="original-text-full">${escapeHtml(item.original_text)}</div>
                     
                     <h4><i class="fas fa-highlight"></i> Texte original avec erreurs surlignées</h4>
                     <div id="original-highlighted-${item.id}" class="original-text-highlighted">
@@ -1944,8 +1989,6 @@ async function loadTextDetails(textId, originalHighlightedContainer, correctedTe
         
         // Afficher le texte original avec erreurs surlignées
         if (textDetails.errors && textDetails.errors.length > 0) {
-            let highlightedText = textDetails.originalText;
-            
             // Dédupliquer les erreurs qui ont les mêmes positions
             const uniqueErrors = [];
             const seenPositions = new Set();
@@ -1958,31 +2001,44 @@ async function loadTextDetails(textId, originalHighlightedContainer, correctedTe
                 }
             });
             
-            // Trier les erreurs par position pour éviter les conflits (de la fin vers le début)
-            const sortedErrors = uniqueErrors.sort((a, b) => (b.position_start || 0) - (a.position_start || 0));
+            // Approche sécurisée : construire le HTML directement avec échappement
+            let result = '';
+            let lastIndex = 0;
             
-            // Appliquer le surlignage pour chaque erreur
-            sortedErrors.forEach(error => {
+            // Trier par position croissante pour traiter dans l'ordre
+            const sortedForwardErrors = uniqueErrors.sort((a, b) => (a.position_start || 0) - (b.position_start || 0));
+            
+            sortedForwardErrors.forEach(error => {
                 if (error.position_start !== undefined && error.position_end !== undefined && 
-                    error.position_start >= 0 && error.position_end > error.position_start) {
+                    error.position_start >= 0 && error.position_end > error.position_start &&
+                    error.position_start >= lastIndex) {
                     
-                    const before = highlightedText.substring(0, error.position_start);
-                    const errorText = highlightedText.substring(error.position_start, error.position_end);
-                    const after = highlightedText.substring(error.position_end);
+                    // Ajouter le texte avant l'erreur (échappé)
+                    const beforeText = textDetails.originalText.substring(lastIndex, error.position_start);
+                    result += escapeHtml(beforeText);
                     
+                    // Ajouter l'erreur surlignée
+                    const errorText = textDetails.originalText.substring(error.position_start, error.position_end);
                     const severityClass = `error-highlight-${error.severity || 'medium'}`;
                     const tooltipText = error.correction ? `Correction: ${error.correction}` : (error.error_message || error.message);
-                    // Échapper les caractères spéciaux dans le title
-                    const escapedTooltip = tooltipText ? tooltipText.replace(/"/g, '&quot;').replace(/'/g, '&#39;') : '';
-                    const highlightedError = `<span class="error-highlight ${severityClass}" title="${escapedTooltip}">${errorText}</span>`;
+                    const escapedTooltip = tooltipText ? escapeHtml(tooltipText) : '';
+                    const escapedErrorText = escapeHtml(errorText);
                     
-                    highlightedText = before + highlightedError + after;
+                    result += `<span class="error-highlight ${severityClass}" title="${escapedTooltip}">${escapedErrorText}</span>`;
+                    
+                    lastIndex = error.position_end;
                 }
             });
             
-            originalHighlightedContainer.innerHTML = `<p>${highlightedText}</p>`;
+            // Ajouter le reste du texte après la dernière erreur (échappé)
+            if (lastIndex < textDetails.originalText.length) {
+                result += escapeHtml(textDetails.originalText.substring(lastIndex));
+            }
+            
+            originalHighlightedContainer.innerHTML = `<p>${result}</p>`;
         } else {
-            originalHighlightedContainer.innerHTML = `<p>${textDetails.originalText}</p>`;
+            const escapedText = escapeHtml(textDetails.originalText);
+            originalHighlightedContainer.innerHTML = `<p>${escapedText}</p>`;
         }
         
     } catch (error) {
