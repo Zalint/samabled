@@ -82,6 +82,35 @@
                         <button id="copyBtn" class="secondary-btn"><i class="fas fa-copy"></i> Copier</button>
                     </div>
                     
+                    <!-- Bouton pour générer suggestion de vocabulaire -->
+                    <div id="vocabButtonContainer" class="vocab-button-container hidden">
+                        <button id="generateVocabBtn" class="generate-vocab-btn">
+                            <i class="fas fa-gem"></i> Enrichir votre vocabulaire
+                        </button>
+                    </div>
+                    
+                    <!-- Suggestion de vocabulaire avancé -->
+                    <div id="vocabularySuggestion" class="vocabulary-suggestion hidden">
+                        <div class="vocab-header">
+                            <i class="fas fa-gem"></i>
+                            <h3>Enrichir votre vocabulaire</h3>
+                        </div>
+                        <div class="vocab-content">
+                            <div class="vocab-word">
+                                <span class="vocab-word-text" id="vocabWord"></span>
+                                <span class="vocab-register" id="vocabRegister"></span>
+                            </div>
+                            <div class="vocab-definition" id="vocabDefinition"></div>
+                            <div class="vocab-example" id="vocabExample"></div>
+                            <div class="vocab-replaces" id="vocabReplaces"></div>
+                            <div class="vocab-enriched-text" id="vocabEnrichedText">
+                                <div class="vocab-enriched-label">✨ Votre texte enrichi :</div>
+                                <div class="vocab-enriched-content" id="vocabEnrichedContent"></div>
+                                <button id="copyEnrichedBtn" class="copy-enriched-btn"><i class="fas fa-copy"></i> Copier</button>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <!-- Texte original avec erreurs surlignées -->
                     <div class="original-highlighted-section">
                         <h3>Texte original avec erreurs surlignées</h3>
@@ -229,6 +258,7 @@
                 <!-- Onglets -->
                 <div class="dashboard-tabs">
                     <button class="tab-btn active" data-tab="overview">Vue d'ensemble</button>
+                    <button class="tab-btn" data-tab="summary">Résumé</button>
                     <button class="tab-btn" data-tab="history">Historique</button>
                     <button class="tab-btn" data-tab="progress">Progression</button>
                     <button class="tab-btn" data-tab="analysis">Analyse</button>
@@ -323,6 +353,36 @@
                         <div class="dashboard-section">
                             <h3>Recommandations personnalisées</h3>
                             <div id="recommendations" class="recommendations"></div>
+                        </div>
+                    </div>
+
+                    <!-- Résumé -->
+                    <div id="summary-tab" class="tab-content">
+                        <div class="summary-header">
+                            <h3><i class="fas fa-clipboard-list"></i> Résumé des erreurs les plus fréquentes</h3>
+                            <p>Voici un aperçu de vos erreurs les plus courantes avec des exemples concrets pour vous aider à progresser.</p>
+                        </div>
+                        
+                        <div class="summary-stats">
+                            <div class="summary-stat">
+                                <span class="stat-number" id="totalErrorTypes">0</span>
+                                <span class="stat-label">Types d'erreurs différents</span>
+                            </div>
+                            <div class="summary-stat">
+                                <span class="stat-number" id="mostFrequentError">0</span>
+                                <span class="stat-label">Erreur la plus fréquente</span>
+                            </div>
+                        </div>
+
+                        <div class="error-summary-list" id="errorSummaryList">
+                            <!-- Les erreurs les plus fréquentes seront affichées ici -->
+                        </div>
+
+                        <div class="summary-tips">
+                            <h4><i class="fas fa-lightbulb"></i> Conseils pour améliorer votre écriture</h4>
+                            <div id="summaryTips" class="tips-list">
+                                <!-- Les conseils personnalisés seront affichés ici -->
+                            </div>
                         </div>
                     </div>
 

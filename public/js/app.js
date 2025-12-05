@@ -171,6 +171,12 @@ function initializeEventListeners() {
     elements.themeToggle.addEventListener('click', toggleTheme);
     elements.inputText.addEventListener('input', updateTextStats);
     
+    // Bouton de suggestion de vocabulaire
+    const generateVocabBtn = document.getElementById('generateVocabBtn');
+    if (generateVocabBtn) {
+        generateVocabBtn.addEventListener('click', generateVocabSuggestion);
+    }
+    
     // Sélecteurs de langue
     document.querySelectorAll('.language-selector button').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -857,8 +863,147 @@ function displayCorrection(data) {
         }
     }
     
+    // Stocker les textes pour la suggestion de vocabulaire (à la demande)
+    lastOriginalText = data.originalText;
+    lastCorrectedText = correctedText;
+    
+    // Afficher le bouton de vocabulaire
+    showVocabButton();
+    
     // Afficher la liste des erreurs
     displayErrors(data.errors);
+}
+
+// Variables pour stocker le texte actuel (pour la suggestion de vocabulaire)
+let lastOriginalText = '';
+let lastCorrectedText = '';
+let lastLanguage = 'fr';
+
+// Fonction pour afficher le bouton de vocabulaire
+function showVocabButton() {
+    const vocabButtonContainer = document.getElementById('vocabButtonContainer');
+    const vocabSection = document.getElementById('vocabularySuggestion');
+    
+    if (vocabButtonContainer) {
+        vocabButtonContainer.classList.remove('hidden');
+    }
+    if (vocabSection) {
+        vocabSection.classList.add('hidden');
+    }
+}
+
+// Fonction pour générer la suggestion de vocabulaire (appelée par le bouton)
+async function generateVocabSuggestion() {
+    const btn = document.getElementById('generateVocabBtn');
+    const vocabSection = document.getElementById('vocabularySuggestion');
+    const vocabButtonContainer = document.getElementById('vocabButtonContainer');
+    
+    if (!lastOriginalText || !lastCorrectedText) {
+        showNotification('Veuillez d\'abord corriger un texte', 'warning');
+        return;
+    }
+    
+    // Désactiver le bouton et afficher le chargement
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Génération...';
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/vocabulary-suggestion`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                originalText: lastOriginalText,
+                correctedText: lastCorrectedText,
+                language: lastLanguage
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Erreur lors de la génération');
+        }
+        
+        const data = await response.json();
+        
+        if (data.suggestion) {
+            displayVocabularySuggestion(data.suggestion);
+            // Cacher le bouton après succès
+            if (vocabButtonContainer) {
+                vocabButtonContainer.classList.add('hidden');
+            }
+        } else {
+            showNotification('Aucune suggestion disponible', 'info');
+        }
+        
+    } catch (error) {
+        console.error('Erreur vocab:', error);
+        showNotification('Erreur lors de la génération de la suggestion', 'error');
+    } finally {
+        // Réactiver le bouton
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-gem"></i> Enrichir votre vocabulaire';
+        }
+    }
+}
+
+// Fonction pour afficher la suggestion de vocabulaire avancé
+function displayVocabularySuggestion(suggestion) {
+    const vocabSection = document.getElementById('vocabularySuggestion');
+    if (!vocabSection) return;
+    
+    if (!suggestion || !suggestion.word) {
+        vocabSection.classList.add('hidden');
+        return;
+    }
+    
+    // Afficher la section
+    vocabSection.classList.remove('hidden');
+    
+    // Remplir les éléments
+    const wordEl = document.getElementById('vocabWord');
+    const registerEl = document.getElementById('vocabRegister');
+    const definitionEl = document.getElementById('vocabDefinition');
+    const exampleEl = document.getElementById('vocabExample');
+    const replacesEl = document.getElementById('vocabReplaces');
+    const enrichedContentEl = document.getElementById('vocabEnrichedContent');
+    const enrichedTextSection = document.getElementById('vocabEnrichedText');
+    
+    if (wordEl) wordEl.textContent = suggestion.word;
+    if (registerEl) registerEl.textContent = suggestion.register || 'soutenu';
+    if (definitionEl) definitionEl.textContent = suggestion.definition || '';
+    if (exampleEl) exampleEl.textContent = suggestion.example || '';
+    if (replacesEl) {
+        if (suggestion.replaces) {
+            replacesEl.textContent = `Peut remplacer : "${suggestion.replaces}"`;
+            replacesEl.style.display = 'flex';
+        } else {
+            replacesEl.style.display = 'none';
+        }
+    }
+    
+    // Afficher le texte enrichi
+    if (enrichedContentEl && enrichedTextSection) {
+        if (suggestion.enrichedText) {
+            enrichedContentEl.textContent = suggestion.enrichedText;
+            enrichedTextSection.style.display = 'block';
+            
+            // Ajouter l'event listener pour le bouton de copie
+            const copyEnrichedBtn = document.getElementById('copyEnrichedBtn');
+            if (copyEnrichedBtn) {
+                copyEnrichedBtn.onclick = () => {
+                    navigator.clipboard.writeText(suggestion.enrichedText).then(() => {
+                        showNotification('Texte enrichi copié !', 'success');
+                    }).catch(() => {
+                        showNotification('Erreur lors de la copie', 'error');
+                    });
+                };
+            }
+        } else {
+            enrichedTextSection.style.display = 'none';
+        }
+    }
 }
 
 function displayOriginalWithHighlights(originalText, errors) {
@@ -1804,6 +1949,9 @@ function renderDashboard() {
     // Vue d'ensemble
     renderOverview();
     
+    // Résumé
+    renderSummary();
+    
     // Historique
     renderHistory();
     
@@ -1846,6 +1994,96 @@ function renderOverview() {
     renderRecommendations(dashboardData.recommendations || []);
 }
 
+// Afficher le résumé
+function renderSummary() {
+    if (!dashboardData.summary) return;
+    
+    const summary = dashboardData.summary;
+    
+    // Statistiques du résumé
+    document.getElementById('totalErrorTypes').textContent = summary.totalErrorTypes || 0;
+    document.getElementById('mostFrequentError').textContent = summary.mostFrequentError || 0;
+    
+    // Afficher les erreurs avec exemples
+    renderErrorSummaryList(summary.errorDetails);
+    
+    // Afficher les conseils
+    renderSummaryTips(summary.tips);
+}
+
+// Afficher la liste des erreurs avec exemples
+function renderErrorSummaryList(errors) {
+    const container = document.getElementById('errorSummaryList');
+    
+    if (!errors || errors.length === 0) {
+        container.innerHTML = `
+            <div class="no-errors-message">
+                <i class="fas fa-check-circle"></i>
+                <h4>Excellent travail !</h4>
+                <p>Vous n'avez pas d'erreurs récurrentes. Continuez à utiliser l'application pour maintenir votre niveau.</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = errors.map((error, index) => `
+        <div class="error-summary-item">
+            <div class="error-header">
+                <div class="error-info">
+                    <h4 class="error-type">${error.type}</h4>
+                    <span class="error-frequency">${error.count} occurrence${error.count > 1 ? 's' : ''}</span>
+                </div>
+                <div class="error-rank">#${index + 1}</div>
+            </div>
+            
+            <div class="error-examples">
+                ${error.examples.map(example => `
+                    <div class="example-item">
+                        <div class="example-header">
+                            <span class="example-label">Exemple :</span>
+                        </div>
+                        <div class="example-content">
+                            <div class="example-original">
+                                <span class="example-text">❌ ${example.original}</span>
+                            </div>
+                            <div class="example-corrected">
+                                <span class="example-text">✅ ${example.corrected}</span>
+                            </div>
+                            ${example.message ? `
+                                <div class="example-explanation">
+                                    <span class="explanation-text">💡 ${example.message}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `).join('');
+}
+
+// Afficher les conseils du résumé
+function renderSummaryTips(tips) {
+    const container = document.getElementById('summaryTips');
+    
+    if (!tips || tips.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Continuez à utiliser l\'application pour recevoir des conseils personnalisés</p>';
+        return;
+    }
+
+    container.innerHTML = tips.map(tip => `
+        <div class="tip-item">
+            <div class="tip-icon">
+                <i class="${tip.icon}"></i>
+            </div>
+            <div class="tip-content">
+                <h5 class="tip-title">${tip.title}</h5>
+                <p class="tip-description">${tip.description}</p>
+            </div>
+        </div>
+    `).join('');
+}
+
 // Afficher les erreurs communes
 function renderCommonErrors(errors) {
     const container = document.getElementById('commonErrors');
@@ -1872,12 +2110,164 @@ function renderRecommendations(recommendations) {
         return;
     }
 
-    container.innerHTML = recommendations.map(rec => `
-        <div class="recommendation-item">
-            <h4>${rec.title}</h4>
-            <p>${rec.description}</p>
-        </div>
-    `).join('');
+    // Base de données des liens d'apprentissage
+    const learningLinks = {
+        'orthographe': {
+            fr: {
+                title: 'Apprendre l\'orthographe',
+                url: 'https://www.ortholud.com/orthographe.html',
+                description: 'Exercices et règles d\'orthographe'
+            },
+            en: {
+                title: 'Learn spelling',
+                url: 'https://www.spellingcity.com/',
+                description: 'Spelling exercises and rules'
+            }
+        },
+        'grammaire': {
+            fr: {
+                title: 'Révisez la grammaire',
+                url: 'https://www.grammaire-francaise.com/',
+                description: 'Règles de grammaire française'
+            },
+            en: {
+                title: 'Review grammar',
+                url: 'https://www.grammarly.com/blog/',
+                description: 'English grammar rules and tips'
+            }
+        },
+        'ponctuation': {
+            fr: {
+                title: 'Améliorer la ponctuation',
+                url: 'https://www.leconjugueur.com/ponctuation.php',
+                description: 'Règles de ponctuation française'
+            },
+            en: {
+                title: 'Improve punctuation',
+                url: 'https://owl.purdue.edu/owl/general_writing/punctuation/',
+                description: 'English punctuation rules'
+            }
+        },
+        'conjugaison': {
+            fr: {
+                title: 'Maîtriser la conjugaison',
+                url: 'https://www.leconjugueur.com/',
+                description: 'Conjugaison française complète'
+            },
+            en: {
+                title: 'Master verb conjugation',
+                url: 'https://www.verbix.com/',
+                description: 'English verb conjugation'
+            }
+        },
+        'vocabulaire': {
+            fr: {
+                title: 'Enrichir le vocabulaire',
+                url: 'https://www.larousse.fr/dictionnaires/francais',
+                description: 'Dictionnaire et enrichissement lexical'
+            },
+            en: {
+                title: 'Enrich vocabulary',
+                url: 'https://www.merriam-webster.com/',
+                description: 'English dictionary and vocabulary'
+            }
+        },
+        'syntaxe': {
+            fr: {
+                title: 'Améliorer la syntaxe',
+                url: 'https://www.etudes-litteraires.com/syntaxe.php',
+                description: 'Règles de syntaxe française'
+            },
+            en: {
+                title: 'Improve syntax',
+                url: 'https://owl.purdue.edu/owl/general_writing/sentence_structure/',
+                description: 'English sentence structure'
+            }
+        },
+        'accord': {
+            fr: {
+                title: 'Maîtriser les accords',
+                url: 'https://www.leconjugueur.com/accord.php',
+                description: 'Règles d\'accord en français'
+            },
+            en: {
+                title: 'Master agreement',
+                url: 'https://owl.purdue.edu/owl/general_writing/grammar/subject_verb_agreement.html',
+                description: 'Subject-verb agreement rules'
+            }
+        },
+        'style': {
+            fr: {
+                title: 'Améliorer le style',
+                url: 'https://www.etudes-litteraires.com/style.php',
+                description: 'Conseils pour améliorer le style'
+            },
+            en: {
+                title: 'Improve writing style',
+                url: 'https://owl.purdue.edu/owl/general_writing/style/',
+                description: 'Writing style improvement tips'
+            }
+        }
+    };
+
+    // Fonction pour trouver le lien d'apprentissage approprié
+    function findLearningLink(recommendation) {
+        const title = recommendation.title.toLowerCase();
+        const description = recommendation.description.toLowerCase();
+        
+        // Chercher des mots-clés dans le titre et la description
+        for (const [key, links] of Object.entries(learningLinks)) {
+            if (title.includes(key) || description.includes(key)) {
+                return links[currentLanguage] || links.fr; // Fallback sur français
+            }
+        }
+        
+        // Si aucun mot-clé trouvé, essayer de détecter par le contenu
+        if (title.includes('orthographe') || description.includes('orthographe') || title.includes('spelling')) {
+            return learningLinks.orthographe[currentLanguage] || learningLinks.orthographe.fr;
+        }
+        if (title.includes('grammaire') || description.includes('grammaire') || title.includes('grammar')) {
+            return learningLinks.grammaire[currentLanguage] || learningLinks.grammaire.fr;
+        }
+        if (title.includes('ponctuation') || description.includes('ponctuation') || title.includes('punctuation')) {
+            return learningLinks.ponctuation[currentLanguage] || learningLinks.ponctuation.fr;
+        }
+        
+        // Lien par défaut pour l'amélioration générale
+        return {
+            fr: {
+                title: 'Ressources d\'apprentissage',
+                url: 'https://www.leconjugueur.com/',
+                description: 'Ressources générales pour améliorer votre français'
+            },
+            en: {
+                title: 'Learning resources',
+                url: 'https://owl.purdue.edu/owl/',
+                description: 'General resources to improve your English'
+            }
+        }[currentLanguage] || {
+            title: 'Ressources d\'apprentissage',
+            url: 'https://www.leconjugueur.com/',
+            description: 'Ressources générales pour améliorer votre français'
+        };
+    }
+
+    container.innerHTML = recommendations.map(rec => {
+        const learningLink = findLearningLink(rec);
+        const learnMoreText = currentLanguage === 'fr' ? 'Apprendre plus' : 'Learn more';
+        
+        return `
+            <div class="recommendation-item">
+                <h4>${rec.title}</h4>
+                <p>${rec.description}</p>
+                <a href="${learningLink.url}" target="_blank" rel="noopener noreferrer" class="learning-link">
+                    <i class="fas fa-external-link-alt"></i>
+                    ${learningLink.title}
+                    <span class="link-description">${learningLink.description}</span>
+                </a>
+            </div>
+        `;
+    }).join('');
 }
 
 // Afficher l'historique

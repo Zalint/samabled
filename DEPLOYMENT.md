@@ -92,7 +92,7 @@ CREATE TRIGGER update_users_updated_at
    - **Branch** : `main`
 
 3. Configurez le service :
-   - **Name** : `samabled-app`
+   - **Name** : `samabled`
    - **Region** : Même région que votre base de données
    - **Branch** : `main`
    - **Root Directory** : (laisser vide)

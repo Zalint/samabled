@@ -87,6 +87,7 @@ app.get('/', (req, res) => {
 // Route pour le tableau de bord utilisateur
 app.get('/api/dashboard', authenticateToken, async (req, res) => {
     try {
+        console.log('📊 Dashboard API appelée pour l\'utilisateur:', req.user.id);
         const userId = req.user.id;
         
         // Récupérer les statistiques générales
@@ -137,23 +138,92 @@ app.get('/api/dashboard', authenticateToken, async (req, res) => {
             improvementRate = ((improvement.previous_avg - improvement.recent_avg) / improvement.previous_avg) * 100;
         }
 
-        // Récupérer les erreurs les plus fréquentes
+        // Récupérer les erreurs les plus fréquentes avec exemples
         const commonErrorsQuery = `
             SELECT 
-                error_type,
-                COUNT(*) as count
+                e.error_type,
+                COUNT(*) as count,
+                e.original_word as example_text,
+                e.corrected_word as example_correction,
+                e.error_message as example_message
             FROM errors e
             JOIN corrected_texts ct ON e.text_id = ct.id
             WHERE ct.user_id = $1
-            GROUP BY error_type
+            GROUP BY e.error_type, e.original_word, e.corrected_word, e.error_message
             ORDER BY count DESC
-            LIMIT 5
+            LIMIT 10
         `;
-        const commonErrorsResult = await pool.query(commonErrorsQuery, [userId]);
-        const commonErrors = commonErrorsResult.rows.map(row => ({
-            type: row.error_type,
-            count: parseInt(row.count)
-        }));
+        console.log('🔍 Exécution de la requête des erreurs communes...');
+        let commonErrorsResult;
+        try {
+            commonErrorsResult = await pool.query(commonErrorsQuery, [userId]);
+            console.log('📋 Résultats des erreurs communes:', commonErrorsResult.rows.length, 'lignes');
+        } catch (error) {
+            console.error('❌ Erreur lors de la requête des erreurs communes:', error.message);
+            // Si la requête échoue, utiliser une requête plus simple
+            const simpleErrorsQuery = `
+                SELECT 
+                    error_type,
+                    COUNT(*) as count
+                FROM errors e
+                JOIN corrected_texts ct ON e.text_id = ct.id
+                WHERE ct.user_id = $1
+                GROUP BY error_type
+                ORDER BY count DESC
+                LIMIT 5
+            `;
+            commonErrorsResult = await pool.query(simpleErrorsQuery, [userId]);
+            console.log('📋 Résultats des erreurs simples:', commonErrorsResult.rows.length, 'lignes');
+        }
+        
+        // Grouper par type d'erreur et garder le meilleur exemple
+        const errorGroups = {};
+        if (commonErrorsResult.rows && commonErrorsResult.rows.length > 0) {
+            commonErrorsResult.rows.forEach(row => {
+                const errorType = row.error_type;
+                if (!errorGroups[errorType]) {
+                    errorGroups[errorType] = {
+                        type: errorType,
+                        count: 0,
+                        examples: []
+                    };
+                }
+                errorGroups[errorType].count += parseInt(row.count);
+                
+                // Ajouter un exemple seulement si les données sont disponibles
+                if (row.example_text && row.example_correction) {
+                    errorGroups[errorType].examples.push({
+                        original: row.example_text,
+                        corrected: row.example_correction,
+                        message: row.example_message || 'Aucune explication disponible'
+                    });
+                }
+            });
+        }
+
+        // Convertir en tableau et trier par fréquence
+        const commonErrors = Object.values(errorGroups)
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 5)
+            .map(error => {
+                // Si aucun exemple n'est disponible, créer des exemples par défaut
+                let examples = error.examples.slice(0, 2);
+                if (examples.length === 0) {
+                    examples = [{
+                        original: `Exemple d'erreur de ${error.type}`,
+                        corrected: `Correction d'erreur de ${error.type}`,
+                        message: `Cette erreur de ${error.type} apparaît ${error.count} fois dans vos textes.`
+                    }];
+                }
+                
+                return {
+                    type: error.type,
+                    count: error.count,
+                    examples: examples
+                };
+            });
+        
+        console.log('📊 Erreurs communes traitées:', commonErrors.length);
 
         // Récupérer l'historique des textes corrigés
         const historyQuery = `
@@ -187,6 +257,14 @@ app.get('/api/dashboard', authenticateToken, async (req, res) => {
         // Générer une analyse des forces et faiblesses
         const analysis = await generateAnalysis(commonErrors, stats, userId);
 
+        // Générer des données spécifiques pour le résumé
+        const summaryData = {
+            totalErrorTypes: commonErrors.length,
+            mostFrequentError: commonErrors.length > 0 ? commonErrors[0].count : 0,
+            errorDetails: commonErrors,
+            tips: await generateSummaryTips(commonErrors, userId)
+        };
+
         const dashboardData = {
             stats: {
                 totalCorrections: parseInt(stats.total_corrections),
@@ -207,7 +285,8 @@ app.get('/api/dashboard', authenticateToken, async (req, res) => {
             commonErrors,
             recommendations,
             history,
-            analysis
+            analysis,
+            summary: summaryData
         };
 
         res.json(dashboardData);
@@ -332,6 +411,74 @@ async function generateAnalysis(commonErrors, stats, userId) {
     });
 
     return analysis;
+}
+
+// Fonction pour générer des conseils spécifiques au résumé
+async function generateSummaryTips(commonErrors, userId) {
+    const tips = [];
+
+    if (commonErrors.length === 0) {
+        tips.push({
+            icon: "fas fa-star",
+            title: "Excellent travail !",
+            description: "Vous n'avez pas d'erreurs récurrentes. Continuez à utiliser l'application pour maintenir votre niveau."
+        });
+        return tips;
+    }
+
+    // Conseils basés sur les types d'erreurs les plus fréquents
+    const errorTypeTips = {
+        'orthographe': {
+            icon: "fas fa-spell-check",
+            title: "Améliorer l'orthographe",
+            description: "Relisez attentivement vos textes et utilisez un correcteur orthographique. Faites attention aux mots courants que vous confondez souvent."
+        },
+        'grammaire': {
+            icon: "fas fa-language",
+            title: "Renforcer la grammaire",
+            description: "Révisez les règles de grammaire de base, particulièrement l'accord des verbes et des adjectifs. Pratiquez avec des exercices spécifiques."
+        },
+        'conjugaison': {
+            icon: "fas fa-book",
+            title: "Maîtriser la conjugaison",
+            description: "Révisez les temps de conjugaison, surtout les verbes irréguliers. Utilisez des tableaux de conjugaison pour vous aider."
+        },
+        'ponctuation': {
+            icon: "fas fa-comma",
+            title: "Améliorer la ponctuation",
+            description: "Apprenez les règles de ponctuation : virgules, points, points-virgules. La ponctuation améliore la lisibilité de vos textes."
+        },
+        'vocabulaire': {
+            icon: "fas fa-book-open",
+            title: "Enrichir le vocabulaire",
+            description: "Lisez régulièrement et notez les nouveaux mots. Utilisez un dictionnaire pour vérifier le sens et l'orthographe des mots."
+        }
+    };
+
+    // Ajouter des conseils pour les 3 erreurs les plus fréquentes
+    commonErrors.slice(0, 3).forEach((error, index) => {
+        const tip = errorTypeTips[error.type.toLowerCase()] || {
+            icon: "fas fa-exclamation-triangle",
+            title: `Erreur ${error.type}`,
+            description: `Concentrez-vous sur les erreurs de ${error.type.toLowerCase()}. Cette erreur apparaît ${error.count} fois dans vos textes.`
+        };
+        tips.push(tip);
+    });
+
+    // Conseils généraux
+    tips.push({
+        icon: "fas fa-clock",
+        title: "Pratique régulière",
+        description: "Utilisez l'application quotidiennement pour identifier et corriger vos erreurs. La régularité est la clé du progrès."
+    });
+
+    tips.push({
+        icon: "fas fa-eye",
+        title: "Relecture attentive",
+        description: "Prenez le temps de relire vos textes avant de les soumettre. Lisez à voix haute pour détecter les erreurs plus facilement."
+    });
+
+    return tips;
 }
 
 // Route pour servir l'application (catch-all pour SPA)
